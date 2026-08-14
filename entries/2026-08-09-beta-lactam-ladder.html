@@ -1,0 +1,67 @@
+<div class="pearl e-bla">
+<style>
+.e-bla{--bxbg:#f1f0e9;--bxbd:#dcd9cb;--gnbg:#e9f5ee;--gnbd:#c0dfcc;--gn:#1c6b4a;--rdbg:#fdeeea;--rdbd:#f0c4bd;--rd:#a33a35;--dash:#d3d3cd;--con:#9aa1a9}
+@media (prefers-color-scheme:dark){.e-bla{--bxbg:#26261f;--bxbd:#3b392c;--gnbg:#16302a;--gnbd:#2c5a48;--gn:#8fd0ae;--rdbg:#38231b;--rdbd:#6b3a2a;--rd:#e8a183;--dash:#454540;--con:#5a626c}}
+.e-bla .sheet{min-width:560px}
+.e-bla .cols{display:grid;grid-template-columns:1fr 76px 1fr 76px 1fr;gap:0;align-items:center}
+.e-bla .ch{text-align:center;font-weight:600;color:var(--ink);padding:0 6px;margin-bottom:10px}
+.e-bla .band{position:relative;border:1.5px dashed var(--dash);border-radius:12px;padding:26px 12px 12px}
+.e-bla .bandlab{position:absolute;top:7px;left:13px;font-size:11px;color:var(--mut);font-style:normal}
+.e-bla .bx{border:1px solid var(--bxbd);background:var(--bxbg);border-radius:9px;padding:9px 6px;text-align:center;min-width:0}
+.e-bla .bx .n{font-weight:600;color:var(--ink)}
+.e-bla .bx .s{font-size:.82em;color:var(--mut)}
+.e-bla .bx.g{background:var(--gnbg);border-color:var(--gnbd)}
+.e-bla .bx.g .n{color:var(--gn)}
+.e-bla .bx.r{background:var(--rdbg);border-color:var(--rdbd)}
+.e-bla .bx.r .n{color:var(--rd)}
+.e-bla .bx.r .s{color:var(--rd)}
+.e-bla .gain{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 5px}
+.e-bla .gl{font-size:8.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);font-style:normal;text-align:center;line-height:1.2;white-space:nowrap}
+.e-bla .ga{display:flex;align-items:center;width:100%}
+.e-bla .ga .hl{flex:1;height:1.5px;background:var(--con)}
+.e-bla .ga .ah{flex:none;width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:5.5px solid var(--con)}
+.e-bla .darr{padding:0 12px;margin:2px 0}
+.e-bla .darr span{display:block;text-align:center;color:var(--con);font-size:1.15em;line-height:1.2}
+.e-bla .esbl{display:grid;grid-template-columns:1fr 76px 1fr 76px 1fr;gap:0;align-items:center;margin-top:20px;padding:0 12px}
+.e-bla .esbl .bx.r{grid-column:1/4}
+.e-bla .esbl .ga{padding:0 10px}
+</style>
+
+  <div class="tblwrap"><div class="sheet">
+    <div class="cols" style="padding:0 13.5px;">
+      <div class="ch">1 · Cephalosporins</div><span></span>
+      <div class="ch">2 · Combos (BL–BLI)</div><span></span>
+      <div class="ch">3 · Carbapenems</div>
+    </div>
+
+    <div class="band">
+      <span class="bandlab">No Pseudomonas coverage</span>
+      <div class="cols">
+        <div class="bx"><div class="n">CTX</div><div class="s">ceftriaxone</div></div>
+        <div class="gain"><span class="gl">+ anaerobes</span><span class="ga"><span class="hl"></span><span class="ah"></span></span></div>
+        <div class="bx"><div class="n">Unasyn</div><div class="s">ampicillin–sulbactam</div></div>
+        <div class="gain"><span class="gl">+ ESBL</span><span class="ga"><span class="hl"></span><span class="ah"></span></span></div>
+        <div class="bx"><div class="n">Ertapenem</div><div class="s">“erta”</div></div>
+      </div>
+    </div>
+
+    <div class="darr"><div class="cols"><span>↓</span><span></span><span>↓</span><span></span><span>↓</span></div></div>
+
+    <div class="band">
+      <span class="bandlab">Covers Pseudomonas</span>
+      <div class="cols">
+        <div class="bx g"><div class="n">Cefepime</div><div class="s">4th gen</div></div>
+        <div class="gain"><span class="gl">+ anaerobes</span><span class="ga"><span class="hl"></span><span class="ah"></span></span></div>
+        <div class="bx g"><div class="n">Zosyn</div><div class="s">pip-tazo</div></div>
+        <div class="gain"><span class="gl">+ ESBL</span><span class="ga"><span class="hl"></span><span class="ah"></span></span></div>
+        <div class="bx g"><div class="n">Meropenem</div><div class="s">“mero”</div></div>
+      </div>
+    </div>
+
+    <div class="esbl">
+      <div class="bx r"><div class="n">ESBL: not reliable</div><div class="s">escalate to a carbapenem</div></div>
+      <div class="ga"><span class="hl"></span><span class="ah"></span></div>
+      <div class="bx g"><div class="n">ESBL: covered</div></div>
+    </div>
+  </div></div>
+</div>

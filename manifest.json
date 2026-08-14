@@ -1,0 +1,115 @@
+{
+  "sections": [
+    "Cross-Cover & Acute Care",
+    "Critical Care",
+    "Cardiology",
+    "Pulmonology",
+    "Renal & Electrolytes",
+    "Infectious Diseases",
+    "Endocrine & Obesity",
+    "MSK & Sports",
+    "Inpatient Essentials"
+  ],
+  "entries": [
+    {
+      "id": "2026-08-09-pleural-effusion",
+      "title": "Classifying a Pleural Effusion",
+      "date": "2026-08-09",
+      "section": "Pulmonology",
+      "keywords": "pleural effusion, transudate, exudate, light's criteria, pseudoexudate, albumin gradient, nt-probnp, thoracentesis, pleural fluid, heart failure, cirrhosis, ldh, diuretics, note"
+    },
+    {
+      "id": "2026-08-09-beta-lactam-ladder",
+      "title": "Beta-Lactam Ladder: Pseudomonas & ESBL",
+      "date": "2026-08-09",
+      "section": "Infectious Diseases",
+      "keywords": "beta-lactams, antibiotics, ceftriaxone, cefepime, unasyn, ampicillin-sulbactam, zosyn, piperacillin-tazobactam, ertapenem, meropenem, carbapenems, pseudomonas, esbl, antibiotic coverage, note"
+    },
+    {
+      "id": "2026-08-08-antiarrhythmic-drugs",
+      "title": "Anti-Arrhythmic Drugs I–V",
+      "date": "2026-08-08",
+      "section": "Cardiology",
+      "keywords": "antiarrhythmics, vaughan williams, procainamide, quinidine, lidocaine, flecainide, propafenone, amiodarone, sotalol, verapamil, diltiazem, adenosine, digoxin, torsades de pointes, slide",
+      "source": "https://x.com/Ph_LamaAlghamdi/status/2053891808153809358"
+    },
+    {
+      "id": "2026-07-18-icu-pressors",
+      "title": "ICU Pressors & Inotropes",
+      "date": "2026-07-18",
+      "section": "Critical Care",
+      "keywords": "pressors, vasopressors, inotropes, norepinephrine, levophed, vasopressin, phenylephrine, epinephrine, dopamine, dobutamine, milrinone, angiotensin ii, methylene blue, shock, icu, chalktalk"
+    },
+    {
+      "id": "2026-07-16-icu-sedation",
+      "title": "ICU Sedation, Analgesia & Paralysis",
+      "date": "2026-07-16",
+      "section": "Critical Care",
+      "keywords": "sedation, analgesia, paralysis, paralytics, propofol, dexmedetomidine, precedex, midazolam, versed, ketamine, fentanyl, dilaudid, hydromorphone, morphine, cisatracurium, nimbex, rocuronium, vecuronium, train of four, icu, chalktalk"
+    },
+    {
+      "id": "2026-07-10-wm-dotphrases",
+      "title": "Weight Management Dot Phrases Reference",
+      "date": "2026-07-10",
+      "section": "Endocrine & Obesity",
+      "keywords": "dot phrases, weight management, obesity, glp-1, wegovy, zepbound, semaglutide, tirzepatide, contrave, qsymia, saxenda, bariatric surgery, epic, ehr, ucsf, slide"
+    },
+    {
+      "id": "2026-07-10-wm-insurance",
+      "title": "Weight Management Insurance Coverage",
+      "date": "2026-07-10",
+      "section": "Endocrine & Obesity",
+      "keywords": "weight management, obesity, glp-1, insurance coverage, prior authorization, bmi, medicare, medi-cal, commercial insurance, novocare, lillydirect, compounding pharmacy, slide"
+    },
+    {
+      "id": "2026-07-09-shoulder-exam",
+      "title": "Essential Shoulder Examination",
+      "date": "2026-07-09",
+      "section": "MSK & Sports",
+      "keywords": "shoulder exam, shoulder examination, rotator cuff, impingement, hawkins test, neer's test, empty can test, belly press test, infraspinatus, ac joint, biceps tendon, range of motion, musculoskeletal, physical exam, slide"
+    },
+    {
+      "id": "2026-07-09-knee-exam",
+      "title": "Essential Knee Exam",
+      "date": "2026-07-09",
+      "section": "MSK & Sports",
+      "keywords": "knee exam, knee examination, patellofemoral pain, osteoarthritis, oa, meniscus tear, mcmurray test, lachman test, acl, mcl, lcl, pcl, physical exam, slide"
+    },
+    {
+      "id": "2026-04-16-abcde",
+      "title": "ABCDE Approach to Unwell Patient",
+      "date": "2026-04-16",
+      "section": "Cross-Cover & Acute Care",
+      "keywords": "abcde, rapid assessment, unwell patient, deteriorating patient, airway, breathing, circulation, disability, rapid response, ricu, gcs, glasgow coma scale, slide"
+    },
+    {
+      "id": "2026-04-16-metoprolol-mnemonic",
+      "title": "Metoprolol Formulations Mnemonic",
+      "date": "2026-04-16",
+      "section": "Cardiology",
+      "keywords": "metoprolol, tartrate, succinate, lopressor, toprol-xl, short acting, long acting, beta blocker, mnemonic, dosing, note"
+    },
+    {
+      "id": "2026-04-16-calcium-albumin",
+      "title": "Calcium-Albumin Correction Validity",
+      "date": "2026-04-16",
+      "section": "Renal & Electrolytes",
+      "keywords": "calcium, albumin, correction formula, hypocalcemia, ionized calcium, serum albumin, diagnostic accuracy, electrolyte, laboratory testing, clinical chemistry, corrected calcium, total calcium, critical care, paper",
+      "source": "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2829419"
+    },
+    {
+      "id": "2026-04-16-sleep",
+      "title": "Inpatient Sleep Management",
+      "date": "2026-04-16",
+      "section": "Inpatient Essentials",
+      "keywords": "insomnia, sleep, melatonin, suvorexant, belsomra, trazodone, mirtazapine, remeron, quetiapine, seroquel, zolpidem, ambien, benzodiazepines, delirium, inpatient, slide"
+    },
+    {
+      "id": "2026-04-16-pain",
+      "title": "Inpatient Pain Management Ladder",
+      "date": "2026-04-16",
+      "section": "Inpatient Essentials",
+      "keywords": "pain management, analgesic ladder, acetaminophen, tylenol, ibuprofen, nsaids, ketorolac, tramadol, codeine, oxycodone, hydromorphone, morphine, inpatient, slide"
+    }
+  ]
+}

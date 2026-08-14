@@ -1,0 +1,116 @@
+<div class="pearl e-ple">
+<style>
+.e-ple{--stepbg:#f1f0e9;--stepbd:#dcd9cb;--gnbg:#e9f5ee;--gnbd:#c0dfcc;--gn:#1c6b4a;--rdbg:#fdefe9;--rdbd:#f0cabb;--rd:#a3492e;--pillbg:#ffffff;--pillbd:#c9cdd3;--con:#b9bfc7}
+@media (prefers-color-scheme:dark){.e-ple{--stepbg:#26261f;--stepbd:#3b392c;--gnbg:#16302a;--gnbd:#2c5a48;--gn:#8fd0ae;--rdbg:#38231b;--rdbd:#6b3a2a;--rd:#e8a183;--pillbg:#1b2026;--pillbd:#454c55;--con:#4a525c}}
+.e-ple .fnote{font-size:.85em;color:var(--mut);margin:0 0 12px;line-height:1.5}
+.e-ple .frow{display:grid;grid-template-columns:minmax(0,42%) 118px minmax(0,1fr);align-items:center}
+.e-ple .box{border:1px solid;border-radius:9px;padding:9px 12px;min-width:0}
+.e-ple .step{background:var(--stepbg);border-color:var(--stepbd)}
+.e-ple .eb{font-size:.6rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+.e-ple .bt{font-weight:700;color:var(--ink)}
+.e-ple .bc{font-size:.9em;line-height:1.45;margin-top:1px}
+.e-ple .go{background:var(--gnbg);border-color:var(--gnbd)}
+.e-ple .go .bt{color:var(--gn)}
+.e-ple .ro{background:var(--rdbg);border-color:var(--rdbd)}
+.e-ple .ro .bt{color:var(--rd)}
+.e-ple .harrow{display:flex;align-items:center;min-width:0}
+.e-ple .hl{flex:1;height:1.5px;background:var(--con);min-width:6px}
+.e-ple .pill{flex:none;border:1px solid var(--pillbd);background:var(--pillbg);border-radius:999px;padding:2px 8px;font-size:.58rem;font-weight:700;letter-spacing:.07em;color:var(--mut);white-space:nowrap}
+.e-ple .ah{flex:none;width:0;height:0;border-top:4.5px solid transparent;border-bottom:4.5px solid transparent;border-left:6px solid var(--con)}
+.e-ple .downrow{display:grid;grid-template-columns:minmax(0,42%) 1fr}
+.e-ple .down{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 0}
+.e-ple .down .dar{color:var(--con);line-height:.9;font-size:1.05em}
+.e-ple .why{border:1px solid var(--line2);border-radius:9px;padding:9px 12px;margin-top:16px}
+.e-ple .legend{display:flex;flex-wrap:wrap;gap:5px 16px;align-items:center;margin-top:12px;font-size:.78em;color:var(--mut)}
+.e-ple .sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid;vertical-align:-1px;margin-right:5px}
+.e-ple .sw.s{background:var(--stepbg);border-color:var(--stepbd)}
+.e-ple .sw.g{background:var(--gnbg);border-color:var(--gnbd)}
+.e-ple .sw.r{background:var(--rdbg);border-color:var(--rdbd)}
+@media (max-width:600px){
+  .e-ple .frow{grid-template-columns:1fr;gap:5px}
+  .e-ple .harrow{padding-left:16px}
+  .e-ple .hl:first-child{display:none}
+  .e-ple .harrow{gap:6px}
+  .e-ple .downrow{grid-template-columns:1fr}
+  .e-ple .down{align-items:flex-start;padding-left:16px}
+}
+</style>
+
+  <p class="fnote">Every arrow is labeled with the result that sends you that way.<br>Exit right = question answered. Continue down = still unresolved.</p>
+
+  <div class="frow">
+    <div class="box step">
+      <div class="eb">Step 1</div>
+      <div class="bt">Light's criteria</div>
+      <div class="bc">Protein ratio &gt;0.5 · LDH ratio &gt;0.6<br>Fluid LDH &gt; 2/3 of serum ULN</div>
+    </div>
+    <div class="harrow"><span class="hl"></span><span class="pill">ALL 3 NEGATIVE</span><span class="hl"></span><span class="ah"></span></div>
+    <div class="box go">
+      <div class="bt">Transudate</div>
+      <div class="bc">Done — treat the underlying cause.</div>
+    </div>
+  </div>
+  <div class="downrow"><div class="down"><span class="pill">ANY 1 POSITIVE</span><span class="dar">↓</span></div></div>
+
+  <div class="frow">
+    <div class="box step">
+      <div class="eb">Step 2</div>
+      <div class="bt">Clinical picture</div>
+      <div class="bc">Is heart failure or cirrhosis suspected?</div>
+    </div>
+    <div class="harrow"><span class="hl"></span><span class="pill">NO</span><span class="hl"></span><span class="ah"></span></div>
+    <div class="box ro">
+      <div class="bt">True exudate</div>
+      <div class="bc">No HF/cirrhosis to muddy the labs.</div>
+    </div>
+  </div>
+  <div class="downrow"><div class="down"><span class="pill">YES</span><span class="dar">↓</span></div></div>
+
+  <div class="frow">
+    <div class="box step">
+      <div class="eb">Step 3</div>
+      <div class="bt">Albumin test</div>
+      <div class="bc">HF: serum − fluid albumin &gt;1.2 g/dL<br>Cirrhosis: fluid/serum ratio &lt;0.6</div>
+    </div>
+    <div class="harrow"><span class="hl"></span><span class="pill">CRITERIA MET</span><span class="hl"></span><span class="ah"></span></div>
+    <div class="box go">
+      <div class="bt">Pseudoexudate → transudate</div>
+      <div class="bc">Diuretics inflated the fluid labs.<br>Catches ~83% (HF) · ~77% (cirrhosis)</div>
+    </div>
+  </div>
+  <div class="downrow"><div class="down"><span class="pill">NOT MET</span><span class="dar">↓</span></div></div>
+
+  <div class="frow">
+    <div class="box step">
+      <div class="eb">Step 4</div>
+      <div class="bt">NT-proBNP</div>
+      <div class="bc">Fluid or serum · cutoff <span class="dose">1500 pg/mL</span></div>
+    </div>
+    <div class="harrow"><span class="hl"></span><span class="pill">≥1500</span><span class="hl"></span><span class="ah"></span></div>
+    <div class="box go">
+      <div class="bt">Cardiac effusion (transudate)</div>
+      <div class="bc">Sens 94% · Spec 94% · LR+ 15.2</div>
+    </div>
+  </div>
+  <div class="downrow"><div class="down"><span class="pill">&lt;1500</span><span class="dar">↓</span></div></div>
+
+  <div class="frow">
+    <div class="box ro">
+      <div class="eb">Outcome</div>
+      <div class="bt">Exudate confirmed</div>
+      <div class="bc">Now find the cause: cytology,<br>cultures, ADA (TB), ± chest CT.</div>
+    </div>
+  </div>
+
+  <div class="callout evidence" style="margin-top:20px;">
+    <span class="co-label">Why the order matters</span>
+    <p>Diuretics concentrate pleural protein and LDH — ~25% of heart-failure effusions falsely meet Light's. Steps 3–4 re-test only that suspect group. Sensitivity stays near 98%; specificity climbs from 74–83% into the low 90s.</p>
+  </div>
+
+  <div class="legend">
+    <span><span class="sw s"></span>test step</span>
+    <span><span class="sw g"></span>transudate exit</span>
+    <span><span class="sw r"></span>exudate exit</span>
+    <span class="mut">ULN = upper limit of normal for serum LDH</span>
+  </div>
+</div>

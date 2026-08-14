@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pearl — study notes</title>
+<meta name="description" content="Pearl — a fast, searchable clinical reference of residency study notes: pressors, sedation, antibiotics, effusions, exams, and ward essentials.">
+<meta property="og:title" content="Pearl — study notes">
+<meta property="og:description" content="A fast, searchable clinical reference of residency study notes.">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pearl">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a3a5c'/><circle cx='50' cy='54' r='26' fill='%23ffffff'/><circle cx='42' cy='46' r='9' fill='%23dfe6ee'/></svg>">
+<link rel="preload" href="fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="pearl.css">
+</head>
+<body>
+<header class="top wrap">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#1a3a5c"/><circle cx="50" cy="54" r="26" fill="#fff"/><circle cx="42" cy="46" r="9" fill="#dfe6ee"/></svg>
+    <h1>Pearl</h1>
+    <span class="sub">study notes</span>
+  </div>
+  <div class="right">
+    <span class="count" id="count"></span>
+    <a class="wb" href="https://maxweiss10.github.io/whitebook" target="_blank" rel="noopener">White Book ↗</a>
+  </div>
+</header>
+
+<div class="searchbar">
+  <div class="wrap">
+    <div class="sbrow">
+      <input id="q" type="search" placeholder="Search notes, drugs, abbreviations…  ( / )" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Search notes" role="combobox" aria-expanded="false" aria-controls="pal">
+      <details id="tocm" class="tocm">
+        <summary>Contents</summary>
+        <div id="tocm-list"></div>
+      </details>
+    </div>
+    <div id="pal" class="pal" role="listbox" hidden></div>
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<div class="layout wrap">
+  <nav id="toc" class="toc" aria-label="Table of contents"></nav>
+  <div class="maincol">
+    <main id="list"><p class="loading">Loading notes…</p></main>
+    <p class="empty" id="empty" hidden>No notes match. <button id="clearfilter" type="button">Clear filter</button></p>
+  </div>
+</div>
+
+<footer class="wrap foot">
+  <span>Add notes with <span class="code">/pearls</span> in Claude Code — press <kbd>?</kbd> for shortcuts.</span>
+  <a href="https://docs.google.com/document/d/1N8egmcK1GHmA6VPiwi2uGR71VcNt8Ve-M-tMkczFMjc/edit" target="_blank" rel="noopener">Legacy doc archive ↗</a>
+</footer>
+
+<dialog id="keys">
+  <div class="kbox">
+    <h3>Keyboard shortcuts</h3>
+    <dl>
+      <dt><kbd>/</kbd></dt><dd>Focus search</dd>
+      <dt><kbd>↑</kbd> <kbd>↓</kbd> <kbd>↵</kbd></dt><dd>Navigate / open results</dd>
+      <dt><kbd>j</kbd> / <kbd>k</kbd></dt><dd>Next / previous note</dd>
+      <dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>Back to top</dd>
+      <dt><kbd>?</kbd></dt><dd>This help</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Close / clear</dd>
+    </dl>
+  </div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
