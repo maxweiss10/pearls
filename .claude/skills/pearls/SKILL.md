@@ -1,13 +1,13 @@
 ---
 name: pearls
-description: Pearl — the user's supplementary White Book, a searchable real-text study-notes site at maxweiss10.github.io/pearl-study-notes. Turns anything — chalktalk/slide photos, screenshots, paper or article URLs, YouTube videos, blocks of text, quick facts — into clean clinical-reference entries organized by medical sub-discipline. Understands free-form requests, no fixed syntax ("put these images together as-is", "make this text into a visual", "turn this video into a concise guide", "move X to cardiology", "fix the pressors entry"). Use for /pearls, /pearl, "add a pearl", "add to my study notes", or any request to capture, edit, reorganize, or regenerate study-note entries.
+description: Pearl — the user's supplementary White Book, a searchable real-text study-notes site at maxweiss10.github.io/pearls. Turns anything — chalktalk/slide photos, screenshots, paper or article URLs, YouTube videos, blocks of text, quick facts — into clean clinical-reference entries organized by medical sub-discipline. Understands free-form requests, no fixed syntax ("put these images together as-is", "make this text into a visual", "turn this video into a concise guide", "move X to cardiology", "fix the pressors entry"). Use for /pearls, /pearl, "add a pearl", "add to my study notes", or any request to capture, edit, reorganize, or regenerate study-note entries.
 argument-hint: <anything — images, URL, text, or an instruction in plain words>
 ---
 
 You are working on **Pearl**, the user's supplementary White Book: UCSF-specific and rotation-acquired knowledge that is NOT already in the MGH White Book. Every entry is REAL TEXT (selectable, searchable, highlightable) — never a screenshot, never a rendered PNG.
 
-**Repo**: on this Mac `/Users/home_mrw/Documents/Desktop/Claude Projects/study-notes-web` (clone of `maxweiss10/pearl-study-notes`); in a cloud/claude.ai session use the repo checkout root. Paths below are repo-relative.
-**Live site**: https://maxweiss10.github.io/pearl-study-notes/ (rebuilds ~30-60 s after push).
+**Repo**: on this Mac `/Users/home_mrw/Documents/Desktop/Claude Projects/study-notes-web` (clone of `maxweiss10/pearls`); in a cloud/claude.ai session use the repo checkout root. Paths below are repo-relative.
+**Live site**: https://maxweiss10.github.io/pearls/ (rebuilds ~30-60 s after push).
 
 ## 1 · Understand the request — plain words, no fixed grammar
 
@@ -36,10 +36,9 @@ Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but ar
 
 ## 3 · Metadata
 
-- **Title**: 2-6 words, medical terminology ("ICU Pressors & Inotropes"). The site renders it at 32px as the page's landmark, followed by a small `section · Updated date` line — do NOT add bottom-line summaries, reading times, or any other metadata to the fragment.
+- **Title**: 2-6 words, medical terminology ("ICU Pressors & Inotropes").
 - **id**: `YYYY-MM-DD-slug` (today + 2-4 word kebab slug) → file `entries/{id}.html`.
 - **Section**: pick from `manifest.json → sections` (medical sub-disciplines, White-Book style). If none fits, CREATE one at discipline level (e.g. "Pulmonology", "Infectious Diseases", "GI & Hepatology", "Heme/Onc", "Neurology", "Outpatient & Prevention", "Procedures", "UCSF Systems & Epic") and insert it at a sensible position in the sections array. No near-duplicates, no over-narrow sections.
-- **Aliases** (optional manifest field): extra search terms - abbreviations, brand/generic pairs, synonyms - that do not belong in keywords. The site already expands ~50 common abbreviations automatically (SVT, AF, ESBL, DKA and so on), so add aliases only for terms it would miss.
 - **Keywords**: 8-15 flat lowercase comma-separated tokens — drugs (generic + brand), diagnoses (full + abbrev), core concepts, distinctive context, plus one source-type token (`chalktalk`/`slide`/`paper`/`photo`/`note`/`video`). No doses, no sentence fragments. Keywords live in the manifest ONLY — the site indexes them for search but never displays them.
 
 ## 4 · Design the entry — clinical reference register, real text always
@@ -52,19 +51,13 @@ The register is Sanford Guide / Pocket Medicine, not slides. Typography, alignme
 - No filled bars/panels/pills/badges/coins/tiles, no shadows, no rounded boxes, no per-entry palettes, no decorative glyphs or emoji (no ⚠ ★ ☾ — red text IS the caution marker).
 
 **Scan anatomy** — every row same fixed slots, so the eye drops straight down a column:
-- drug/lead name in `<b>` · attributes plain or `.mut`/`.mech` · dose in `.dose` (renders one size up in medium weight with tabular figures - units verbatim) · cautions LAST, in `.warn`
+- drug/lead name in `<b>` · attributes plain or `.mut`/`.mech` · dose in `.dose` (tabular figures, units verbatim) · cautions LAST, in `.warn`
 - ordered items: markers as `<b class="mk">1.</b>` / `<b class="mk">A.</b>` at text size — the site hangs them in a left gutter so wrapped lines align under the text, never under the marker. No coins or tiles.
 - separator convention: lead **—** details, items inside the details separated by `·` ("**Norepinephrine** (Levophed) — α > β"). Use the em dash everywhere a lead meets its detail; never a colon.
 - conditional/parenthetical asides in `.mut` (renders italic gray) — e.g. "(blood cultures, troponin, d-dimer, type & screen)"
 
 **Base primitives cover nearly everything** (`pearl.css`):
-`.sec` major subsection (16px semibold, +`.later` for spacing) · `.caps`/`.eyebrow` small-caps label · `.strip` flow line · `.lab` bold lead-in · `.mut` `.mech` `.note` `.brand` gray secondary · `.row2` two-column scan row (`.rule` column divider; `.full` spans both; stacks on phones with `.mlab`) · `.colhead2` column headers · `.duo` side-by-side halves · `table.cmp` table (small-caps `th`, faint zebra, medium first column; wrap in `.tblwrap`) · `.dose` `.warn` `.drug` `.code` `.ptext` `.photo` `.mk`
-
-**Warnings are one component:** wrap every clinical danger or escalation in `<span class="warn">`. The site prefixes the ⚠ marker and colors it — never type the glyph yourself, never bold it instead, never use red for anything else.
-
-**Callouts** - `<div class="callout TYPE"><span class="co-label">Label</span><p>text</p></div>`. Types: `emergency` and `contraindication` (red), `pitfall` (amber), `treatment` (green), `evidence` and `investigation` (blue), `procedure` (violet), `pearl` and `highyield` (gray). They render as a colored left rule plus a small-caps label - no filled boxes, no emoji. Use sparingly, for content that genuinely stands apart; an inline `.warn` is still right for a caution that belongs inside a row.
-
-**Other primitives:** `.panel` (summary block), `.dcard` (drug card), `.checklist`. Prefer plain rows and tables first; reach for a card only when the content is a genuinely discrete unit.
+`.sec` small-caps hairline section label (+`.later`) · `.caps` inline small-caps lead · `.strip` flow line · `.lab` bold lead-in · `.mut` `.mech` `.note` `.brand` gray secondary · `.row2` two-column hairline row (`.rule` adds a column divider; `.full` spans both; stacks automatically on phones with `.mlab` slot labels) · `.colhead2` small-caps column headers · `.duo` side-by-side halves · `table.cmp` hairline table (small-caps `th`, no zebra, wrap in `.tblwrap`) · `.dose` `.warn` `.drug` `.code` `.eyebrow` `.ptext` `.photo`
 
 **Structure by content** (all hairlines + typography):
 - Ordered escalation / sequence → `.colhead2` + numbered `.row2.rule` rows
@@ -100,4 +93,4 @@ Never force-push. Push rejected / offline → say the entry is committed locally
 
 ## 7 · Report
 
-One line per entry: title + `https://maxweiss10.github.io/pearl-study-notes/#{id}` (mention the ~1 min rebuild). For edits, say exactly what changed.
+One line per entry: title + `https://maxweiss10.github.io/pearls/#{id}` (mention the ~1 min rebuild). For edits, say exactly what changed.
