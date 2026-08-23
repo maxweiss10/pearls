@@ -88,8 +88,11 @@ jobs:
               man['sections'].append(meta['section'])
           json.dump(man, open('manifest.json','w'), indent=2, ensure_ascii=False)
 
-          open(os.environ['GITHUB_ENV'],'a').write(f"PEARL_ID={meta['id']}\nPEARL_TITLE={meta['title']}\n")
+          import shlex
+          open('/tmp/pearl.env','w').write(
+              f"PEARL_ID={shlex.quote(meta['id'])}\nPEARL_TITLE={shlex.quote(meta['title'])}\n")
           PYEOF
+          source /tmp/pearl.env
 
           # Photos attached to the same issue become the entry's images.
           urls=$(grep -oE 'https://(github\.com/user-attachments/assets/[A-Za-z0-9-]+|user-images\.githubusercontent\.com/[^ )"<>]+|raw\.githubusercontent\.com/maxweiss10/pearls/[^ )"<>]+)' <<< "${BODY:-}" | head -10 || true)
