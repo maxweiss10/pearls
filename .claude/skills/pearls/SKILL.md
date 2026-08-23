@@ -17,6 +17,7 @@ Interpret intent from whatever the user says:
 |---|---|
 | Photo(s) of a chalktalk / slide / whiteboard / handout | **Redesign** into a reference entry (default) |
 | "use these exact images", "as-is", "don't redesign", "just put them together" | **Raw** — insert photo(s) untouched (stacked if several), still auto-title/tag/section |
+| "keep the diagram", "include the actual image", "use the image itself" alongside written notes | **Figure** — real-text entry with the source image embedded where it belongs (§4, Images) |
 | Several images, combine-vs-separate unclear | One AskUserQuestion: separate entries / one merged redesign / one raw stack |
 | "make this text/block into an entry" | **Text** entry |
 | Paper or article URL (± their takeaway) | **Paper** entry — takeaway used VERBATIM as body if given; else 3 short lines (Main finding / Design / Takeaway); source link |
@@ -43,7 +44,7 @@ Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but ar
 
 ## 4 · Design the entry — clinical reference register, real text always
 
-The register is Sanford Guide / Pocket Medicine, not slides. Typography, alignment, and position carry ALL hierarchy. **Grayscale print test:** if the entry's hierarchy would collapse printed in grayscale, redo it — hierarchy must be structural, not chromatic.
+The register is Sanford Guide / Pocket Medicine, not slides. Typography, alignment, and position carry ALL hierarchy. **Grayscale print test:** if the entry's hierarchy would collapse printed in grayscale, redo it — hierarchy must be structural, not chromatic. **Squint test:** blurred, only the entry title and the red cautions should survive.
 
 **Color budget (strict)**
 - Grayscale by default. Muted blue is for links only — never inside entries.
@@ -74,7 +75,7 @@ The register is Sanford Guide / Pocket Medicine, not slides. Typography, alignme
 
 **Hard rules**: root `<div class="pearl e-{short}">`; real text only; no scripts/iframes/external resources; no `<html>/<head>/<body>`; no title at top (site renders it); no rotated text; no fixed pixel widths on containers; density tight — hairline dividers, inline flow over bullet lists, no decorative padding; split a huge multi-topic source into 2 entries.
 
-**Raw photos**: `sips -s format jpeg -Z 1600 "<f>" --out entries/img/{id}-N.jpg`; fragment = stacked `<img class="photo" src="entries/img/{id}-N.jpg" alt="detailed content summary">`.
+**Images** — real text is the default, but an explicit ask ("use the image itself", "as-is", "keep the diagram") overrides it: honor it, don't quietly redesign anyway. Convert with `sips -s format jpeg -Z 1600 "<f>" --out entries/img/{id}-N.jpg` (numbered in display order), then either stack them as the whole entry, or drop one into a text entry as a figure — `.sec` label + `<img class="photo">` + optional `.note` caption — when the source is a diagram, tracing, or chart markup can't reproduce honestly. Alt text IS the search index for that content: every drug, dose, arrow, and label in a sentence or two, never "photo of whiteboard", and the same terms go in the keywords. If the image is mostly typed text, say so in one line and build it as asked anyway.
 
 ## 5 · Manifest
 
