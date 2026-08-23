@@ -1,21 +1,31 @@
 ---
 name: pearls
-description: Add or edit entries in Max's Pearl clinical study-notes site. Turns chalktalk photos, slides, papers, videos, or text into ready-to-commit reference HTML plus its manifest row — redesigned as real text by default, or using the photos themselves when asked ("as-is", "keep the diagram").
+description: Add or edit entries in Max's Pearl clinical study-notes site (maxweiss10.github.io/pearls) straight from chat. Turns chalktalk photos, slides, papers, videos, or text into reference entries — redesigned as real text by default, or using the photos themselves when asked ("as-is", "keep the diagram") — and publishes them via one tap-to-publish link with a preview-before-live step. Use for "add a pearl", "add to my study notes", or any request to capture, edit, or fix a study-note entry.
 ---
 
-# Pearl — study notes (claude.ai edition)
+# Pearl — study notes (claude.ai chat edition)
 
 **Pearl** is Max's supplementary White Book: UCSF-specific and rotation-acquired knowledge that is NOT already in the MGH White Book. Live at https://maxweiss10.github.io/pearls/ (repo `maxweiss10/pearls`).
 
-Every entry is REAL TEXT — selectable, searchable, highlightable. Never a screenshot of text, never a rendered PNG of a recreated diagram.
+Every entry is REAL TEXT — selectable, searchable, highlightable. Never a screenshot of text, never a rendered PNG of a recreated diagram. The one override: when Max explicitly asks for the image itself (§3a).
 
-## What this skill does here
+## How publishing works from chat
 
-Plain chat can't push to git — but the repo publishes from GitHub issues. So this skill builds the complete entry, then hands Max **one link**: a prefilled issue. He taps it, taps **Submit**, and the repo's `pearl-publish` Action stages the entry on a draft branch and comments back a preview link (`…/pearls/#draft={id}`) within ~a minute. He replies **push** on the issue to publish, or **discard** to drop it. Nothing goes live without the push.
+Chat can't push to git — but the repo publishes from GitHub issues. This skill builds the complete entry, then hands Max **one link**: a prefilled issue. He taps it, taps **Submit**, and the repo's `pearl-publish` Action stages the entry on a draft branch and comments back a **preview link** (`…/pearls/#draft={id}`) within ~a minute — the entry rendered in the real site, not live yet. He replies **push** on the issue to publish (or **discard** to drop it). Nothing goes live without the push.
 
-The deliverable of every request here is that link (§6). No paste-into-GitHub steps unless the link path fails.
+The deliverable of every request is that link (§5). Don't offer paste-into-GitHub steps unless the link path fails (§6).
 
-If the GitHub connector is enabled and `maxweiss10/pearls` is added, READ `manifest.json` first for current sections and entry ids, and read a recent entry (e.g. `entries/2026-07-18-icu-pressors.html`) to match house style. If it isn't connected, ask Max to paste the current `sections` array — or proceed and flag that the section list is unverified.
+**One draft at a time.** The repo holds a single pending draft; a new pearl issue replaces whatever draft is pending. So never hand Max two publish links at once — for a source that splits into several entries, do them sequentially: link for entry 1 → he pushes → link for entry 2. Say that plainly when it applies.
+
+## 0 · Read the site first — no connector needed
+
+Before building anything, web-fetch these raw URLs (public, always current):
+
+- `https://raw.githubusercontent.com/maxweiss10/pearls/main/manifest.json` — current sections, existing ids (avoid collisions), keyword style
+- a recent entry for house-style calibration, e.g. `https://raw.githubusercontent.com/maxweiss10/pearls/main/entries/2026-07-18-icu-pressors.html`
+- for **edits**: the current fragment at `https://raw.githubusercontent.com/maxweiss10/pearls/main/entries/{id}.html`
+
+If web fetch is unavailable, proceed with the fallback section list in §2 and say the section list is unverified.
 
 ## 1 · Read the request — plain words, no fixed grammar
 
@@ -23,23 +33,25 @@ If the GitHub connector is enabled and `maxweiss10/pearls` is added, READ `manif
 |---|---|
 | Photo(s) of a chalktalk / slide / whiteboard / handout | **Redesign** into a reference entry (default) |
 | "use these exact images", "as-is", "don't redesign", "just put them together" | **Raw** — the entry IS the photos: stacked `<img class="photo">` with detailed alt text (§3a) |
-| "keep the diagram", "include the actual image", "use the image itself" alongside written notes | **Figure** — real-text entry with the source image embedded where it belongs (§3a) |
+| "keep the diagram", "include the actual image" alongside written notes | **Figure** — real-text entry with the source image embedded where it belongs (§3a) |
 | Several images, combine-vs-separate unclear | Ask once: separate entries / one merged / one raw stack |
 | A block of text, or "make this into an entry" | **Text** entry |
 | Paper or article URL (± his takeaway) | **Paper** entry — his takeaway VERBATIM as body if given; else 3 short lines (Main finding / Design / Takeaway) + `source` |
 | YouTube link | **Video** entry — distill hard to ONE screenful + `source` |
 | A quick fact or mnemonic | Small **text pearl** |
-| "fix / retitle / regenerate / move [entry]" | Output the corrected full file for that id — filename and id stay stable |
-| "delete / remove [entry]" | **Confirm first.** Name what will be removed (title · section · date), note it stays recoverable in git history, and get an explicit yes. Then give delete instructions (§6c). Never act on an ambiguous reference. |
+| "fix / retitle / regenerate / move [entry]" | **Edit** — fetch the current fragment (§0), apply the change, re-issue with the SAME id (§4); id and filename stay stable |
+| "delete / remove [entry]" | **Confirm first.** Name what will be removed (title · section · date), note it stays recoverable in git history, get an explicit yes — then give the delete steps in §6. Never act on an ambiguous reference. |
+
+**Split rule:** a dense multi-panel source (compiled reference sheet, whole lecture) is never one entry — split into 2-4 by topic, hard ceiling ~8 KB of HTML each, published sequentially (one draft at a time, above).
 
 **Never invent clinical content.** Compress and abbreviate like a resident, but every fact must come from the source or from Max.
 
 ## 2 · Metadata
 
 - **Title** — 2-6 words, medical terminology ("ICU Pressors & Inotropes")
-- **id** — `YYYY-MM-DD-slug` (today's date + 2-4 word kebab slug) → file `entries/{id}.html`
-- **Section** — pick an existing one from `manifest.json`. Current set: Cross-Cover & Acute Care · Critical Care · Cardiology · Pulmonology · Renal & Electrolytes · Infectious Diseases · Endocrine & Obesity · MSK & Sports · Inpatient Essentials. If none fits, create ONE at discipline level (Neurology, GI & Hepatology, Heme/Onc, Outpatient & Prevention, Procedures, UCSF Systems & Epic) and say where it goes in the `sections` array.
-- **Keywords** — 8-15 flat lowercase comma-separated tokens: drugs (generic + brand), diagnoses (full + abbrev), core concepts, distinctive context, plus one source-type token (`chalktalk`/`slide`/`paper`/`photo`/`note`/`video`). No doses, no sentence fragments. They're search-index only; the site never displays them.
+- **id** — `YYYY-MM-DD-slug` (today's date + 2-4 word kebab slug) → becomes `entries/{id}.html`
+- **Section** — pick an existing one from the fetched manifest. Fallback list (as of 8/2026): Cross-Cover & Acute Care · Critical Care · Cardiology · Pulmonology · Renal & Electrolytes · Infectious Diseases · Endocrine & Obesity · MSK & Sports · Inpatient Essentials. If none fits, create ONE at discipline level (Neurology, GI & Hepatology, Heme/Onc, Outpatient & Prevention, Procedures, UCSF Systems & Epic).
+- **Keywords** — 8-15 flat lowercase comma-separated tokens: drugs (generic + brand), diagnoses (full + abbrev), core concepts, distinctive context, plus one source-type token (`chalktalk`/`slide`/`paper`/`photo`/`note`/`video`). No doses, no sentence fragments. Search-index only; never displayed.
 
 ## 3 · Design the entry
 
@@ -49,7 +61,7 @@ Non-negotiables: root `<div class="pearl e-{short}">`; real text only; no script
 
 ## 3a · Using the actual image — when Max asks for it explicitly
 
-The default is real text; an image of text is dead weight, unsearchable and unhighlightable. **An explicit ask overrides that default.** "Use the image itself", "as-is", "don't redesign", "keep the diagram", "just include the photo" — honor it. Don't argue it, and don't quietly redesign anyway. Two shapes:
+The default is real text; an image of text is dead weight, unsearchable and unhighlightable. **An explicit ask overrides that default.** "Use the image itself", "as-is", "don't redesign", "keep the diagram" — honor it. Don't argue, don't quietly redesign anyway. Two shapes:
 
 **Raw entry** — the photos ARE the entry, nothing else in the fragment:
 
@@ -70,10 +82,9 @@ The default is real text; an image of text is dead weight, unsearchable and unhi
 
 Rules for both:
 
-- **Alt text does the searching.** The pixels contribute nothing to the site index, so the alt text carries the content — every drug, dose, arrow, and label, in a sentence or two. Never "photo of whiteboard". Push the same terms into the manifest keywords.
-- **Naming is fixed:** `entries/img/{id}-1.jpg`, `-2`, `-3` … in display order, same `{id}` as the entry file.
-- **Photos travel on the same issue.** Tell Max: attach the photo(s) to the pearl issue before submitting (📎 in the issue composer, in display order). The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
-- **Flag once, then proceed.** If the image is mostly typed text (a slide, a screenshot of a paragraph), say in one line that it won't be searchable and the alt text is doing the work — then build it exactly as asked. Don't re-litigate.
+- **Photos travel on the pearl issue itself.** Tell Max: after the link opens, attach the photo(s) with 📎 in the issue composer, **in display order**, then Submit. The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
+- **Alt text does the searching.** The pixels contribute nothing to the site index — the alt text carries every drug, dose, arrow, and label in a sentence or two. Never "photo of whiteboard". Push the same terms into the keywords.
+- **Flag once, then proceed.** If the image is mostly typed text, say in one line that the alt text will be doing the searching — then build it exactly as asked. Don't re-litigate.
 - Photo entries still get a real title, section, and keywords. The raw path skips the redesign, not the metadata.
 
 ## 4 · Compose the issue body
@@ -90,29 +101,35 @@ One body carries everything — the manifest row in an HTML comment, the fragmen
     </div>
     ```
 
-The Action validates (id format, required fields, pearl root div, ≤20 KB, no scripts) and rejects with an error annotation if malformed — so get it right here. Re-submitting a pearl issue with the same id replaces the pending draft AND replaces the entry on publish (that's the edit path too).
+The Action validates (id format, required fields, pearl root div, ≤20 KB, no scripts) and rejects if malformed — so get it right here. A pearl issue whose id already exists **replaces that entry on publish** — that's the edit path: same id, corrected fragment, done.
 
-## 5 · Build the link
+## 5 · Build the link — the deliverable
 
-With code execution, URL-encode the pieces (python: `urllib.parse.quote`) into:
+URL-encode with code execution:
 
-`https://github.com/maxweiss10/pearls/issues/new?title=pearl%3A%20{TITLE-encoded}&body={body-encoded}`
+```python
+from urllib.parse import quote
+url = ("https://github.com/maxweiss10/pearls/issues/new?title=" +
+       quote(f"pearl: {TITLE}") + "&body=" + quote(BODY))
+```
 
-Render it as a markdown link — **"Tap to publish: {TITLE}"**. ALSO write the raw issue body out as a downloadable file `pearl-issue-body.md` (or print it in a fenced block if file creation is off) with one line: *"If the link opens with an empty body (the GitHub app sometimes drops it), paste this file's contents into the body."* If the encoded URL exceeds ~7,500 characters, skip the prefill: give the bare link `https://github.com/maxweiss10/pearls/issues/new?title=pearl%3A%20{TITLE-encoded}` plus the body to paste.
+The title MUST keep the `pearl: ` prefix — it's the Action's trigger gate. Render the result as a markdown link, e.g. **[Tap to publish: {TITLE}](url)**. ALSO write the raw issue body out as a downloadable file `pearl-issue-body.md` (or print it in a fenced block if file creation is off), with one line: *"If the link opens with an empty body — the GitHub app sometimes drops the prefill — paste this file's contents into the body."* If the encoded URL exceeds ~7,500 characters, skip the body prefill: give `https://github.com/maxweiss10/pearls/issues/new?title=pearl%3A%20{TITLE-encoded}` plus the body to paste.
 
-## 6 · What happens after Submit — tell Max this once
+Then tell Max what happens, once, briefly:
 
-1. ~45 s later the issue gets a comment with the **preview link** — the entry rendered in the real site, not live yet.
-2. Happy → reply **push** on the issue → published, live link comes back, issue closes.
-3. Not happy → tell Claude what to change here in chat → a fresh link (same id) replaces the draft — or reply **discard** to drop it.
-4. Photos attached to the issue become the entry's images automatically (§3a).
+1. Submit → ~45 s → the issue gets a comment with the **preview link** (rendered in the real site, not live).
+2. Happy → reply **push** on the issue → live link comes back, issue closes.
+3. Changes → ask here in chat → a fresh link (same id) replaces the draft. Or reply **discard** to drop it.
+4. Photos attached to the issue become the entry's images automatically.
 
-**Deletes** (only after his explicit confirm): no issue lane — give the two-step web edit: open `entries/{id}.html` → trash → commit; edit `manifest.json` → remove the row. Or point at a Code session.
+## 6 · Fallbacks and deletes
 
-**If the issue lane fails** (Action red, no comment): fall back to hand-paste — `entries/{id}.html` via Add file, manifest row as first item of `entries`, commit both — and say the Action needs a look.
+**Deletes** (only after his explicit confirm — §1): there is no issue lane for deletion. Web edit: open `entries/{id}.html` in the repo → trash icon → commit; then edit `manifest.json` → remove that entry's object (and its section from `sections` if now empty). Or a Code-tab session does it in one ask.
 
-A **Code**-tab session on `maxweiss10/pearls` (phone or desktop) remains the richer lane: same preview flow plus direct git, image inbox polling, and instant iteration without new issues.
+**If the issue lane fails** (Action run red, no comment appears): fall back to hand-paste — create `entries/{id}.html` via Add file, paste the manifest row as the first item of `entries`, commit both — and tell Max the `pearl-publish` Action needs a look from a Code session.
+
+A **Code**-tab session on `maxweiss10/pearls` (phone or desktop) remains the richer lane: same preview flow plus direct git, image-inbox polling, and iteration without new issues.
 
 ## 7 · Report
 
-One line per entry: title, section, and the anchor URL `https://maxweiss10.github.io/pearls/#{id}`. For edits or deletes, say exactly what changed.
+One line per entry: title, section, and the eventual live URL `https://maxweiss10.github.io/pearls/#{id}`. For edits or deletes, say exactly what changed.
