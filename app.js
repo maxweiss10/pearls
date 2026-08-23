@@ -590,6 +590,27 @@
 
   /* ---------- draft preview (#draft=id1,id2 — fragments served from the draft branch) ---------- */
   const DRAFT_BASE = 'https://raw.githubusercontent.com/maxweiss10/pearls/draft/';
+  const DRAFT_API = 'https://api.github.com/repos/maxweiss10/pearls/contents/';
+  const DRAFT_GONE = new Error('draft not found');
+
+  /* api.github.com reflects force-pushes immediately; raw.githubusercontent caches by path
+     for ~5 min and ignores query strings, so it only serves as the rate-limit fallback. */
+  function fetchDraftFile(path, asJson) {
+    /* &cb= busts the API's 60-second shared cache so an amended draft shows on the very next reload */
+    return fetch(DRAFT_API + path + '?ref=draft&cb=' + Date.now(), {
+      headers: { Accept: 'application/vnd.github.raw+json' }, cache: 'no-store'
+    })
+      .then(function (r) {
+        if (r.ok) return asJson ? r.json() : r.text();
+        if (r.status === 404) throw DRAFT_GONE; /* authoritative: branch or file gone */
+        throw new Error('api'); /* rate-limited or flaky → try raw */
+      })
+      .catch(function (e) {
+        if (e === DRAFT_GONE) throw e;
+        return fetch(DRAFT_BASE + path + '?t=' + Date.now(), { cache: 'no-store' })
+          .then(function (r) { if (!r.ok) throw DRAFT_GONE; return asJson ? r.json() : r.text(); });
+      });
+  }
 
   function draftIdsFromHash() {
     const m = location.hash.match(/^#draft=([^&]+)/);
@@ -604,8 +625,7 @@
     document.body.classList.add('drafting');
     document.title = 'Draft · Pearl';
     const bust = '?t=' + Date.now();
-    fetch(DRAFT_BASE + 'manifest.json' + bust, { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error('no draft branch'); return r.json(); })
+    fetchDraftFile('manifest.json', true)
       .then(function (manifest) {
         const metas = ids
           .map(function (id) {
@@ -614,8 +634,7 @@
           .filter(Boolean);
         if (!metas.length) throw new Error('ids not in draft manifest');
         return Promise.all(metas.map(function (m) {
-          return fetch(DRAFT_BASE + 'entries/' + m.id + '.html' + bust, { cache: 'no-store' })
-            .then(function (r) { if (!r.ok) throw new Error(m.id); return r.text(); })
+          return fetchDraftFile('entries/' + m.id + '.html', false)
             .then(function (html) { return [m, html]; });
         }));
       })
