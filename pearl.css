@@ -329,7 +329,24 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
 }
 
 @media print{
-  .searchbar,.foot,.toc,.tocm,#keys{display:none}
+  .searchbar,.foot,.toc,.tocm,#keys,.draftbar{display:none}
   .card{break-inside:avoid}
   body{background:#fff}
 }
+
+/* ---------- draft preview mode (#draft=…) ---------- */
+body.drafting .searchbar,
+body.drafting .toc{display:none}
+body.drafting .layout{display:block; max-width:952px}
+body.drafting .top.wrap,
+body.drafting .foot{max-width:952px}
+body.drafting .card > header,
+body.drafting .sechead,
+body.drafting .meta{margin-left:0}
+.draftbar{
+  margin:var(--s-4) 0 var(--s-2); padding:10px 14px;
+  border:1px solid var(--line-2); border-left:3px solid var(--ink);
+  background:var(--zebra); font-size:var(--t-sm); color:var(--ink-2);
+}
+.draftbar b{color:var(--ink)}
+.draftbar a{white-space:nowrap}

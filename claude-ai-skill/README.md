@@ -10,11 +10,10 @@
 
 **Use this only when you can't use a Code session.** The `.claude/skills/pearls/` copy in this repo writes, commits, and pushes in one step, and it loads anywhere the repo is checked out: Claude Code on the Mac, **and claude.ai → Code tab → select `maxweiss10/pearls` → works on phone**. That last one is the intended phone workflow; this zip is the fallback for plain chat.
 
-**Editing:** source of truth for the site's design doctrine is `.claude/skills/pearls/SKILL.md`. It has three downstream copies that do NOT update themselves — when it changes, push the change to all three:
+**Editing:** source of truth for the site's design doctrine is `.claude/skills/pearls/SKILL.md`. On the Mac, `~/.claude/skills/pearls` is a **symlink** to it — it updates itself. The only manual downstream copy is this zip:
 
-1. `~/.claude/skills/pearls/SKILL.md` — loads in any Claude Code session on the Mac, including ones outside this repo. Plain `cp` it.
-2. `claude-ai-skill/pearls/reference/design-system.md` — mirror the doctrine parts, then re-zip:
+1. `claude-ai-skill/pearls/reference/design-system.md` — mirror the doctrine parts, then re-zip:
 
         cd claude-ai-skill && rm -f pearls-skill.zip && zip -q -r pearls-skill.zip pearls
 
-3. The claude.ai account skill — upload the rebuilt zip via **Replace** (above). Re-zipping alone changes nothing there.
+2. The claude.ai account skill — upload the rebuilt zip via **Replace** (above). Re-zipping alone changes nothing there.

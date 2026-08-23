@@ -588,6 +588,75 @@
   const $clear = document.getElementById('clearfilter');
   if ($clear) $clear.addEventListener('click', function () { $q.dataset.chip = ''; applyFilter(); });
 
+  /* ---------- draft preview (#draft=id1,id2 — fragments served from the draft branch) ---------- */
+  const DRAFT_BASE = 'https://raw.githubusercontent.com/maxweiss10/pearls/draft/';
+
+  function draftIdsFromHash() {
+    const m = location.hash.match(/^#draft=([^&]+)/);
+    if (!m) return null;
+    let ids;
+    try { ids = decodeURIComponent(m[1]).split(',').filter(Boolean); }
+    catch (e) { return null; } /* mangled %-escape from a chat app → treat as no draft */
+    return ids.length ? ids : null;
+  }
+
+  function initDraft(ids) {
+    document.body.classList.add('drafting');
+    document.title = 'Draft · Pearl';
+    const bust = '?t=' + Date.now();
+    fetch(DRAFT_BASE + 'manifest.json' + bust, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('no draft branch'); return r.json(); })
+      .then(function (manifest) {
+        const metas = ids
+          .map(function (id) {
+            return manifest.entries.filter(function (e) { return e.id === id; })[0];
+          })
+          .filter(Boolean);
+        if (!metas.length) throw new Error('ids not in draft manifest');
+        return Promise.all(metas.map(function (m) {
+          return fetch(DRAFT_BASE + 'entries/' + m.id + '.html' + bust, { cache: 'no-store' })
+            .then(function (r) { if (!r.ok) throw new Error(m.id); return r.text(); })
+            .then(function (html) { return [m, html]; });
+        }));
+      })
+      .then(function (pairs) {
+        $list.innerHTML = '';
+        const bar = document.createElement('div');
+        bar.className = 'draftbar';
+        bar.innerHTML = '<b>Draft preview</b> — not on the live site yet. ' +
+          'Reply <span class="code">push</span> in the Claude session to publish. ' +
+          '<a href="./">Live site →</a>';
+        $list.appendChild(bar);
+        pairs.forEach(function (p) {
+          const built = buildCard(p[0], p[1]);
+          /* self-link would swap #draft=… for #id and lose the preview on reload */
+          built.titleEl.removeAttribute('href');
+          /* draft images aren't on main yet — point relative srcs at the draft branch */
+          built.bodyEl.querySelectorAll('img').forEach(function (im) {
+            const src = im.getAttribute('src') || '';
+            if (src && !/^(https?:)?\//i.test(src) && !/^data:/i.test(src)) {
+              im.src = DRAFT_BASE + src + bust;
+            }
+          });
+          $list.appendChild(built.card);
+        });
+        $count.textContent = pairs.length === 1 ? 'draft — 1 note' : 'draft — ' + pairs.length + ' notes';
+      })
+      .catch(function () {
+        $list.innerHTML =
+          '<p class="empty">No draft here — it may already be published, or was replaced by a newer one.</p>' +
+          '<p class="empty"><a href="./">Go to the live site →</a></p>';
+      });
+  }
+
+  /* entering, leaving, or switching drafts is a mode change — reload so the right path runs */
+  window.addEventListener('hashchange', function () {
+    if (draftIdsFromHash() || document.body.classList.contains('drafting')) location.reload();
+  });
+
+  const draftIds = draftIdsFromHash();
+  if (draftIds) { initDraft(draftIds); return; }
+
   fetch('manifest.json', { cache: 'no-store' })
     .then(function (r) { return r.json(); })
     .then(function (manifest) {
