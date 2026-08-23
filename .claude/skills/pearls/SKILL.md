@@ -50,16 +50,17 @@ Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but ar
 
   > I can see the photo but a cloud session can't touch its file — drop it here and I'll take it from there: **https://github.com/maxweiss10/pearls/issues/new?title=photos** (attach the image(s), Submit). Watching for it now — or say "redesign" and I'll build it as real text instead.
 
-  Submitting that issue triggers the `pearl-inbox` Action: it downloads the attachments, normalizes them to ≤1600 px JPEG, commits them to `entries/img/inbox/` on main (~30-60 s), and closes the issue. Meanwhile YOU poll — baseline first, then watch for new files:
+  Submitting that issue triggers the `pearl-inbox` Action (the issue title must start with `photos` — the prefilled link handles that): it downloads the attachments, normalizes them to ≤1600 px JPEG, commits them to `entries/img/inbox/` on main (~30-60 s), and closes the issue. Meanwhile YOU poll. The inbox is always emptied when photos get wired into an entry, so **any file in it is an unconsumed delivery** — poll for non-empty, which stays correct across retries and intervening fetches:
 
   ```bash
-  base=$(git ls-tree -r --name-only origin/main entries/img/inbox/ | sort)
-  for i in $(seq 1 16); do sleep 15; git fetch -q origin main
-    now=$(git ls-tree -r --name-only origin/main entries/img/inbox/ | sort)
-    [ "$now" != "$base" ] && break; done
+  for i in $(seq 1 16); do
+    git fetch -q origin main
+    [ -n "$(git ls-tree -r --name-only origin/main entries/img/inbox/ 2>/dev/null)" ] && break
+    sleep 15
+  done; true
   ```
 
-  When files land: rebuild/rebase the draft on the new origin/main (§6; `git rebase origin/main draft` if the draft already exists), `git mv entries/img/inbox/issueN-*.jpg entries/img/{id}-N.jpg` (this both places the photos AND clears the inbox in the same commit), build the entry, preview as usual. If nothing lands in ~4 min, proceed with whatever else you can and tell the user to say "check again" after they submit. Never pretend to embed an image you don't have bytes for.
+  When files land: rebuild/rebase the draft on the new origin/main (§6; `git rebase origin/main draft` if the draft already exists), then `git mv` each inbox file to `entries/img/{id}-N.jpg` — one mv per file, numbered in display order; the mv both places the photos AND clears the inbox in the same commit (if the entry uses fewer photos than delivered, `git rm` the extras so the inbox ends empty). Build the entry, preview as usual. If nothing lands in ~4 min, proceed with whatever else you can and tell the user to say "check again" after they submit — the poll above re-run works as-is. More photos for the same batch = a new comment with attachments on the same issue (even closed); editing an old issue body does nothing. Never pretend to embed an image you don't have bytes for.
 - **Never hunt the web for the source image** (reverse-searching a watermark, scraping the site it came from) unless the user explicitly gave that URL or asks you to. The inbox is the byte-path.
 - **Conversion tools**, in order of availability: `sips` (macOS) → `magick`/`convert` (ImageMagick) → `python3 -c "from PIL import Image; ..."`. Inbox files are already normalized — use them as-is. Otherwise, if no converter exists and the file is already a web-ready JPEG/PNG ≤ ~1600 px, use it as-is.
 - Read every image with vision regardless. Note every drug, dose, category, arrow, label.

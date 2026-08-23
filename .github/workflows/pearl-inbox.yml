@@ -1,17 +1,22 @@
 # Pearl photo inbox — the byte-path for phone/cloud sessions.
 #
 # Cloud Claude sessions can SEE a chat-uploaded photo but can never touch its
-# bytes. So: Max opens an issue on this repo (one tap from a link Claude sends),
-# attaches the photo(s), submits. This workflow downloads them, normalizes to
-# ≤1600px JPEG, and commits them to entries/img/inbox/ on main — where any
-# session can `git fetch` them within ~a minute. The session then renames them
-# into the entry and clears the inbox. Inbox files are unreferenced, so they
-# never appear on the live site.
+# bytes. So: Max opens an issue titled "photos…" (one tap from the prefilled
+# link Claude sends), attaches the photo(s), submits. This workflow downloads
+# them, normalizes to ≤1600px JPEG, and commits them to entries/img/inbox/ on
+# main — where any session can `git fetch` them within ~a minute. The session
+# renames them into the entry, which also clears the inbox. Inbox files are
+# unreferenced, so they never appear on the live site.
+#
+# To add more photos to the same batch: comment on the (even closed) issue
+# with new attachments. Editing an old issue body does nothing (no `edited`
+# trigger — that would re-harvest consumed photos and let third-party text
+# be laundered through an owner-triggered run).
 name: Pearl inbox
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
   issue_comment:
     types: [created]
 
@@ -25,11 +30,21 @@ concurrency:
 
 jobs:
   harvest:
-    # Only the owner's own issues/comments feed the inbox.
-    if: github.event.sender.login == 'maxweiss10'
+    # Only the owner's own "photos…" issues feed the inbox — the issue must be
+    # authored by the owner, must not be a PR, and for comment events the
+    # comment author must be the owner too (content authorship, not just the
+    # triggering actor).
+    if: >
+      !github.event.issue.pull_request &&
+      github.event.issue.user.login == 'maxweiss10' &&
+      startsWith(github.event.issue.title, 'photos') &&
+      (github.event_name == 'issues' || github.event.comment.user.login == 'maxweiss10')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Ensure ImageMagick
+        run: command -v convert >/dev/null 2>&1 || (sudo apt-get -yqq update && sudo apt-get -yqq install imagemagick)
 
       - name: Harvest attached images
         env:
@@ -44,7 +59,9 @@ jobs:
           urls=$(grep -oE 'https://(github\.com/user-attachments/assets/[A-Za-z0-9-]+|user-images\.githubusercontent\.com/[^ )"<>]+|raw\.githubusercontent\.com/maxweiss10/pearls/[^ )"<>]+)' <<< "${BODY:-}" | head -10 || true)
           if [ -z "$urls" ]; then echo "No image URLs in body — nothing to do."; exit 0; fi
 
-          n=0; saved=""
+          # Continue numbering across batches on the same issue.
+          n=$(find entries/img/inbox -name "issue${ISSUE}-*" 2>/dev/null | wc -l | tr -d ' ')
+          saved=""
           while IFS= read -r u; do
             tmp=$(mktemp)
             if ! curl -sL --max-time 90 --max-filesize 26214400 -o "$tmp" "$u"; then rm -f "$tmp"; continue; fi
@@ -60,7 +77,9 @@ jobs:
             n=$((n+1))
             out="entries/img/inbox/issue${ISSUE}-${n}"
             # Normalize: auto-rotate, cap at 1600px, strip EXIF (GPS!), JPEG q85.
-            if convert "$tmp" -auto-orient -resize '1600x1600>' -strip -quality 85 "${out}.jpg" 2>/dev/null; then
+            # -limit flags blunt decode bombs.
+            if convert -limit memory 256MiB -limit map 512MiB -limit area 128MB \
+                 "$tmp" -auto-orient -resize '1600x1600>' -strip -quality 85 "${out}.jpg" 2>/dev/null; then
               saved="$saved ${out}.jpg"
             else
               cp "$tmp" "${out}.${ext}"; saved="$saved ${out}.${ext}"
@@ -76,6 +95,10 @@ jobs:
           git config user.name "pearl-inbox"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add entries/img/inbox
+          if git diff --cached --quiet; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "Nothing new to save."
+            exit 0
+          fi
           git commit -m "Pearl inbox: photos from #${ISSUE}"
           git pull --rebase origin main || true
           git push origin main
