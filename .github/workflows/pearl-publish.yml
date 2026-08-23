@@ -1,0 +1,173 @@
+# Pearl publish-by-issue — the write-path for plain claude.ai chat.
+#
+# Chat can't push to git, but it can prefill an issue. The chat skill builds a
+# complete entry and hands Max a link to a new issue titled "pearl: {TITLE}"
+# whose body carries the manifest row (in an HTML comment) and the entry HTML
+# (in a fenced block); photos ride along as attachments. Submitting the issue
+# stages everything on the draft branch and comments back the site's preview
+# link. Replying "push" publishes to main; "discard" throws the draft away.
+#
+# Same trust model as pearl-inbox: only owner-authored issues/comments, no
+# `edited` trigger, no PRs.
+name: Pearl publish
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: pearl-publish
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    if: >
+      !github.event.issue.pull_request &&
+      github.event.issue.user.login == 'maxweiss10' &&
+      startsWith(github.event.issue.title, 'pearl') &&
+      github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure ImageMagick
+        run: command -v convert >/dev/null 2>&1 || (sudo apt-get -yqq update && sudo apt-get -yqq install imagemagick)
+
+      - name: Stage entry on draft branch
+        env:
+          BODY: ${{ github.event.issue.body }}
+          ISSUE: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          python3 - << 'PYEOF'
+          import json, os, re, sys, pathlib
+
+          body = os.environ.get('BODY') or ''
+
+          m = re.search(r'<!--pearl\s*(\{.*?\})\s*-->', body, re.S)
+          if not m:
+              print('::error::No <!--pearl {json} --> block found'); sys.exit(78)
+          try:
+              meta = json.loads(m.group(1))
+          except Exception as e:
+              print(f'::error::Manifest JSON invalid: {e}'); sys.exit(78)
+
+          h = re.search(r'```html\s*\n(.*?)\n```', body, re.S)
+          if not h:
+              print('::error::No ```html fenced block found'); sys.exit(78)
+          html = h.group(1).strip()
+
+          errs = []
+          if not re.match(r'^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$', meta.get('id','')): errs.append('bad id')
+          for k in ('title','section','date','keywords'):
+              if not str(meta.get(k,'')).strip(): errs.append(f'missing {k}')
+          if 'class="pearl' not in html: errs.append('html lacks pearl root div')
+          if len(html) > 20000: errs.append('html over 20KB — split the entry')
+          if re.search(r'<script|<iframe|javascript:|\bon\w+\s*=', html, re.I): errs.append('scripts/handlers not allowed')
+          if errs:
+              print('::error::' + '; '.join(errs)); sys.exit(78)
+
+          pathlib.Path(f"entries/{meta['id']}.html").write_text(html + '\n')
+
+          man = json.load(open('manifest.json'))
+          man['entries'] = [e for e in man['entries'] if e['id'] != meta['id']]
+          row = {k: meta[k] for k in ('id','title','date','section','keywords') }
+          if meta.get('source'): row['source'] = meta['source']
+          man['entries'].insert(0, row)
+          if meta['section'] not in man['sections']:
+              man['sections'].append(meta['section'])
+          json.dump(man, open('manifest.json','w'), indent=2, ensure_ascii=False)
+
+          open(os.environ['GITHUB_ENV'],'a').write(f"PEARL_ID={meta['id']}\nPEARL_TITLE={meta['title']}\n")
+          PYEOF
+
+          # Photos attached to the same issue become the entry's images.
+          urls=$(grep -oE 'https://(github\.com/user-attachments/assets/[A-Za-z0-9-]+|user-images\.githubusercontent\.com/[^ )"<>]+|raw\.githubusercontent\.com/maxweiss10/pearls/[^ )"<>]+)' <<< "${BODY:-}" | head -10 || true)
+          n=0
+          if [ -n "$urls" ]; then
+            while IFS= read -r u; do
+              tmp=$(mktemp)
+              curl -sL --max-time 90 --max-filesize 26214400 -o "$tmp" "$u" || { rm -f "$tmp"; continue; }
+              case "$(file --mime-type -b "$tmp")" in image/*) ;; *) rm -f "$tmp"; continue ;; esac
+              n=$((n+1))
+              convert -limit memory 256MiB -limit map 512MiB -limit area 128MB \
+                "$tmp" -auto-orient -resize '1600x1600>' -strip -quality 85 \
+                "entries/img/${PEARL_ID}-${n}.jpg" 2>/dev/null \
+                || cp "$tmp" "entries/img/${PEARL_ID}-${n}.jpg"
+              rm -f "$tmp"
+            done <<< "$urls"
+          fi
+
+          git config user.name "pearl-publish"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B draft origin/main
+          git add entries/ manifest.json
+          git commit -m "Pearl: ${PEARL_TITLE} (#${ISSUE})"
+          git push -f origin draft
+
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "$(printf 'Preview (not live yet): https://maxweiss10.github.io/pearls/#draft=%s\n\nReply **push** to publish, **discard** to throw it away. Attach more photos in a new *pearl* issue if these were wrong — a new pearl issue with the same id replaces this draft.' "$PEARL_ID")"
+
+  decide:
+    if: >
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.issue.user.login == 'maxweiss10' &&
+      github.event.comment.user.login == 'maxweiss10' &&
+      startsWith(github.event.issue.title, 'pearl')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish or discard
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+          ISSUE: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          verdict=$(tr '[:upper:]' '[:lower:]' <<< "${COMMENT:-}" | head -1 | tr -d ' ')
+          case "$verdict" in
+            push|yes|ship|shipit|publish|👍) action=publish ;;
+            discard|cancel|no) action=discard ;;
+            *) echo "not a verdict comment — ignoring"; exit 0 ;;
+          esac
+
+          if ! git rev-parse -q --verify origin/draft >/dev/null; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "No draft branch exists — nothing to $action."
+            exit 0
+          fi
+
+          # Guard: the pending draft must belong to THIS issue.
+          msg=$(git log -1 --format=%s origin/draft)
+          case "$msg" in
+            *"(#${ISSUE})") ;;
+            *) gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "The pending draft is \`$msg\` — not this issue's. Comment on its own issue instead."; exit 0 ;;
+          esac
+
+          git config user.name "pearl-publish"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ "$action" = "publish" ]; then
+            git checkout main
+            git pull --rebase origin main
+            git cherry-pick "$(git merge-base origin/main origin/draft)..origin/draft"
+            git push origin main
+            id=$(git show origin/draft --name-only --format= | grep -oE 'entries/[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\.html' | head -1 | sed 's|entries/||; s|\.html||')
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "Published — live in ~1 min: https://maxweiss10.github.io/pearls/#${id}"
+          else
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "Draft discarded."
+          fi
+          git push origin --delete draft || true
+          gh issue close "$ISSUE" -R "$GITHUB_REPOSITORY" || true
