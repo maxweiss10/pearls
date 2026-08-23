@@ -8,7 +8,7 @@ Every entry is **real text** in a shared design system — selectable, highlight
 
 The `/pearls` skill (`.claude/skills/pearls/SKILL.md`, loaded automatically in any Claude Code session on this repo — including **claude.ai → Code tab → `maxweiss10/pearls`, which works from a phone**) runs a draft-first flow:
 
-1. Say what you want in plain words — photos, a paper URL, a block of text, "as-is", anything.
+1. Say what you want in plain words — photos, a paper URL, a block of text, "as-is", anything. (Cloud sessions can't touch a chat photo's bytes — for "as-is" images Claude sends a one-tap [photo-inbox issue link](https://github.com/maxweiss10/pearls/issues/new?title=photos); attach + submit, and the `pearl-inbox` Action commits the files for the session to pick up automatically.)
 2. Claude builds the entry on a throwaway `draft` branch and replies with a **preview link** (`…/pearls/#draft=<id>`) that renders the draft inside the real site, instantly — nothing is live yet.
 3. Reply with changes to iterate (same link, just reload), or **push** to publish. Only then does anything land on `main`.
 

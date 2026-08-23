@@ -46,8 +46,22 @@ Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but ar
 
 **Images — where the bytes are decides what's possible:**
 - **Local Mac session**: attachments are files on disk. HEIC → `sips -s format png "<f>" --out /tmp/pearl-N.png`. For raw/figure entries: `sips -s format jpeg -Z 1600 "<f>" --out entries/img/{id}-N.jpg` (numbered in display order).
-- **Cloud session**: a chat-uploaded image is vision-only — there is NO file on disk and no way to get its bytes. Redesign/text entries work perfectly (vision reading is all you need). For **raw or figure** requests, say so in one line, then offer via AskUserQuestion: (a) real-text redesign now instead; (b) they upload the photo at https://github.com/maxweiss10/pearls/upload/main/entries/img (works from a phone browser) and tell you — the upload lands as a commit on MAIN, so pull it into the draft with `git fetch origin && git rebase origin/main draft`, then `git mv entries/img/<uploaded-name> entries/img/{id}-N.jpg`, wire it into the fragment, `git add entries/ manifest.json && git commit --amend --no-edit && git push -f origin draft`; (c) save the request for a Mac session. Never pretend to embed an image you don't have bytes for.
-- **Conversion tools**, in order of availability: `sips` (macOS) → `magick`/`convert` (ImageMagick) → `python3 -c "from PIL import Image; ..."`. If none exists and the file is already a web-ready JPEG/PNG ≤ ~1600 px, use it as-is.
+- **Cloud session — a chat-uploaded image is vision-only: NO file on disk, no way to get its bytes.** Redesign/text entries work perfectly (vision reading is all you need). For **raw or figure** requests, use the **photo inbox** — don't ask permission, just send the link in your FIRST reply:
+
+  > I can see the photo but a cloud session can't touch its file — drop it here and I'll take it from there: **https://github.com/maxweiss10/pearls/issues/new?title=photos** (attach the image(s), Submit). Watching for it now — or say "redesign" and I'll build it as real text instead.
+
+  Submitting that issue triggers the `pearl-inbox` Action: it downloads the attachments, normalizes them to ≤1600 px JPEG, commits them to `entries/img/inbox/` on main (~30-60 s), and closes the issue. Meanwhile YOU poll — baseline first, then watch for new files:
+
+  ```bash
+  base=$(git ls-tree -r --name-only origin/main entries/img/inbox/ | sort)
+  for i in $(seq 1 16); do sleep 15; git fetch -q origin main
+    now=$(git ls-tree -r --name-only origin/main entries/img/inbox/ | sort)
+    [ "$now" != "$base" ] && break; done
+  ```
+
+  When files land: rebuild/rebase the draft on the new origin/main (§6; `git rebase origin/main draft` if the draft already exists), `git mv entries/img/inbox/issueN-*.jpg entries/img/{id}-N.jpg` (this both places the photos AND clears the inbox in the same commit), build the entry, preview as usual. If nothing lands in ~4 min, proceed with whatever else you can and tell the user to say "check again" after they submit. Never pretend to embed an image you don't have bytes for.
+- **Never hunt the web for the source image** (reverse-searching a watermark, scraping the site it came from) unless the user explicitly gave that URL or asks you to. The inbox is the byte-path.
+- **Conversion tools**, in order of availability: `sips` (macOS) → `magick`/`convert` (ImageMagick) → `python3 -c "from PIL import Image; ..."`. Inbox files are already normalized — use them as-is. Otherwise, if no converter exists and the file is already a web-ready JPEG/PNG ≤ ~1600 px, use it as-is.
 - Read every image with vision regardless. Note every drug, dose, category, arrow, label.
 
 **URLs** → WebFetch: paper title, the one key finding, must-remember methods (n, design, endpoint).

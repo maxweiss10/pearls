@@ -1,0 +1,85 @@
+# Pearl photo inbox — the byte-path for phone/cloud sessions.
+#
+# Cloud Claude sessions can SEE a chat-uploaded photo but can never touch its
+# bytes. So: Max opens an issue on this repo (one tap from a link Claude sends),
+# attaches the photo(s), submits. This workflow downloads them, normalizes to
+# ≤1600px JPEG, and commits them to entries/img/inbox/ on main — where any
+# session can `git fetch` them within ~a minute. The session then renames them
+# into the entry and clears the inbox. Inbox files are unreferenced, so they
+# never appear on the live site.
+name: Pearl inbox
+
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: pearl-inbox
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    # Only the owner's own issues/comments feed the inbox.
+    if: github.event.sender.login == 'maxweiss10'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Harvest attached images
+        env:
+          BODY: ${{ github.event.comment.body || github.event.issue.body }}
+          ISSUE: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p entries/img/inbox
+
+          # Attachment hosts GitHub itself generates (+ this repo's raw URLs, for tests).
+          urls=$(grep -oE 'https://(github\.com/user-attachments/assets/[A-Za-z0-9-]+|user-images\.githubusercontent\.com/[^ )"<>]+|raw\.githubusercontent\.com/maxweiss10/pearls/[^ )"<>]+)' <<< "${BODY:-}" | head -10 || true)
+          if [ -z "$urls" ]; then echo "No image URLs in body — nothing to do."; exit 0; fi
+
+          n=0; saved=""
+          while IFS= read -r u; do
+            tmp=$(mktemp)
+            if ! curl -sL --max-time 90 --max-filesize 26214400 -o "$tmp" "$u"; then rm -f "$tmp"; continue; fi
+            mime=$(file --mime-type -b "$tmp")
+            case "$mime" in
+              image/jpeg) ext=jpg ;;
+              image/png)  ext=png ;;
+              image/gif)  ext=gif ;;
+              image/webp) ext=webp ;;
+              image/heic|image/heif) ext=heic ;;
+              *) echo "skip $u ($mime)"; rm -f "$tmp"; continue ;;
+            esac
+            n=$((n+1))
+            out="entries/img/inbox/issue${ISSUE}-${n}"
+            # Normalize: auto-rotate, cap at 1600px, strip EXIF (GPS!), JPEG q85.
+            if convert "$tmp" -auto-orient -resize '1600x1600>' -strip -quality 85 "${out}.jpg" 2>/dev/null; then
+              saved="$saved ${out}.jpg"
+            else
+              cp "$tmp" "${out}.${ext}"; saved="$saved ${out}.${ext}"
+            fi
+            rm -f "$tmp"
+          done <<< "$urls"
+
+          if [ -z "$saved" ]; then
+            gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "Found image links but none downloaded as images — try attaching again."
+            exit 0
+          fi
+
+          git config user.name "pearl-inbox"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add entries/img/inbox
+          git commit -m "Pearl inbox: photos from #${ISSUE}"
+          git pull --rebase origin main || true
+          git push origin main
+
+          list=$(for f in $saved; do echo "- \`$f\`"; done)
+          gh issue comment "$ISSUE" -R "$GITHUB_REPOSITORY" -b "$(printf 'Saved to the inbox — your Claude session will pick these up:\n%s' "$list")"
+          gh issue close "$ISSUE" -R "$GITHUB_REPOSITORY" || true
