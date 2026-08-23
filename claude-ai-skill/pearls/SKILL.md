@@ -11,22 +11,9 @@ Every entry is REAL TEXT — selectable, searchable, highlightable. Never a scre
 
 ## What this skill does here
 
-**Say this FIRST, before doing any work** — one line, then carry on without waiting for an answer:
+Plain chat can't push to git — but the repo publishes from GitHub issues. So this skill builds the complete entry, then hands Max **one link**: a prefilled issue. He taps it, taps **Submit**, and the repo's `pearl-publish` Action stages the entry on a draft branch and comments back a preview link (`…/pearls/#draft={id}`) within ~a minute. He replies **push** on the issue to publish, or **discard** to drop it. Nothing goes live without the push.
 
-> Heads up: in a normal chat I can't commit — I'll hand you the files to paste. To have it posted automatically instead, start this from the **Code** tab with the `maxweiss10/pearls` repo selected (works on phone too) and re-send.
-
-Do NOT save this for the end. Max's recurring complaint is doing several rounds of edits and only then learning nothing was posted. He may well answer "just give me the files" — fine, continue — but he decides that up front, not after the work.
-
-A **Code**-tab session with the repo attached loads `.claude/skills/pearls/` from the repo itself and writes + commits + pushes in one step. That is the real `/pearls`. This file is the degraded fallback for plain chat, where there is no git checkout (the GitHub connector is read-only).
-
-So here this skill **produces the exact files to drop in**, and hands over copy-paste-ready instructions:
-
-1. An **entry fragment** → becomes `entries/{id}.html`
-2. A **manifest row** → gets pasted into `manifest.json`
-3. Any **images** the entry uses, renamed to `entries/img/{id}-N.jpg` (§3a)
-4. **Delivery instructions** (§6)
-
-Create both as downloadable files when file creation is available; otherwise print them in fenced code blocks.
+The deliverable of every request here is that link (§6). No paste-into-GitHub steps unless the link path fails.
 
 If the GitHub connector is enabled and `maxweiss10/pearls` is added, READ `manifest.json` first for current sections and entry ids, and read a recent entry (e.g. `entries/2026-07-18-icu-pressors.html`) to match house style. If it isn't connected, ask Max to paste the current `sections` array — or proceed and flag that the section list is unverified.
 
@@ -85,43 +72,46 @@ Rules for both:
 
 - **Alt text does the searching.** The pixels contribute nothing to the site index, so the alt text carries the content — every drug, dose, arrow, and label, in a sentence or two. Never "photo of whiteboard". Push the same terms into the manifest keywords.
 - **Naming is fixed:** `entries/img/{id}-1.jpg`, `-2`, `-3` … in display order, same `{id}` as the entry file.
-- **Hand him the files ready to upload.** If file creation is available, write the images out already renamed and downsized (JPEG, long edge ~1600 px) as downloads — then uploading is drag-and-drop with no renaming. If they can't be written out, give the rename mapping explicitly ("whiteboard photo → `{id}-1.jpg`, drug table → `{id}-2.jpg`") against what he actually sent, in order.
+- **Photos travel on the same issue.** Tell Max: attach the photo(s) to the pearl issue before submitting (📎 in the issue composer, in display order). The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
 - **Flag once, then proceed.** If the image is mostly typed text (a slide, a screenshot of a paragraph), say in one line that it won't be searchable and the alt text is doing the work — then build it exactly as asked. Don't re-litigate.
 - Photo entries still get a real title, section, and keywords. The raw path skips the redesign, not the metadata.
 
-## 4 · Output the entry file
+## 4 · Compose the issue body
 
-Give the complete file contents for `entries/{id}.html` — nothing else in that file.
+One body carries everything — the manifest row in an HTML comment, the fragment in a fenced block:
 
-## 5 · Output the manifest row
+    <!--pearl
+    {"id":"…","title":"…","date":"YYYY-MM-DD","section":"…","keywords":"…","source":"only for papers/videos"}
+    -->
 
-```json
-{
-  "id": "…",
-  "title": "…",
-  "date": "YYYY-MM-DD",
-  "section": "…",
-  "keywords": "…",
-  "source": "https://…   ← papers/videos only, omit otherwise"
-}
-```
+    ```html
+    <div class="pearl e-{short}">
+    …the entry…
+    </div>
+    ```
 
-State plainly: paste it as the **first object inside the `entries` array** (newest first), and add a comma after it. If a new section is needed, say exactly where to insert it in `sections`.
+The Action validates (id format, required fields, pearl root div, ≤20 KB, no scripts) and rejects with an error annotation if malformed — so get it right here. Re-submitting a pearl issue with the same id replaces the pending draft AND replaces the entry on publish (that's the edit path too).
 
-## 6 · Delivery — how Max lands it
+## 5 · Build the link
 
-**a. Adding an entry (phone or desktop, no git):**
-1. Open https://github.com/maxweiss10/pearls
-2. `entries/` → **Add file → Create new file** → name it `{id}.html` → paste the fragment
-3. Back to root → click `manifest.json` → pencil icon → paste the row as the first item in `entries`
-4. **Commit changes** on both (message: `Pearl: {TITLE}`)
-5. Site rebuilds in ~1 minute at https://maxweiss10.github.io/pearls/#{id}
+With code execution, URL-encode the pieces (python: `urllib.parse.quote`) into:
 
-**b. Entries with images (raw or figure):** in the repo open `entries/img/` → **Add file → Upload files** → drop in `{id}-1.jpg`, `{id}-2.jpg` … (already named correctly if they came back as downloads) → commit. Do this before the fragment, or the entry shows broken images until the images land.
+`https://github.com/maxweiss10/pearls/issues/new?title=pearl%3A%20{TITLE-encoded}&body={body-encoded}`
 
-**c. Deleting (only after confirmation):** open `entries/{id}.html` → trash icon → commit; then edit `manifest.json` and remove that object (and the section from `sections` if it's now empty).
+Render it as a markdown link — **"Tap to publish: {TITLE}"**. ALSO write the raw issue body out as a downloadable file `pearl-issue-body.md` (or print it in a fenced block if file creation is off) with one line: *"If the link opens with an empty body (the GitHub app sometimes drops it), paste this file's contents into the body."* If the encoded URL exceeds ~7,500 characters, skip the prefill: give the bare link `https://github.com/maxweiss10/pearls/issues/new?title=pearl%3A%20{TITLE-encoded}` plus the body to paste.
 
-**d. The path that skips all of the above:** a **Code**-tab session with `maxweiss10/pearls` selected — on phone or desktop — or Claude Code on his Mac. Both run the repo's own `/pearls` and write, commit, and push in one step. This was already flagged up top; repeat it here in one line so the manual steps always end with the alternative in view.
+## 6 · What happens after Submit — tell Max this once
+
+1. ~45 s later the issue gets a comment with the **preview link** — the entry rendered in the real site, not live yet.
+2. Happy → reply **push** on the issue → published, live link comes back, issue closes.
+3. Not happy → tell Claude what to change here in chat → a fresh link (same id) replaces the draft — or reply **discard** to drop it.
+4. Photos attached to the issue become the entry's images automatically (§3a).
+
+**Deletes** (only after his explicit confirm): no issue lane — give the two-step web edit: open `entries/{id}.html` → trash → commit; edit `manifest.json` → remove the row. Or point at a Code session.
+
+**If the issue lane fails** (Action red, no comment): fall back to hand-paste — `entries/{id}.html` via Add file, manifest row as first item of `entries`, commit both — and say the Action needs a look.
+
+A **Code**-tab session on `maxweiss10/pearls` (phone or desktop) remains the richer lane: same preview flow plus direct git, image inbox polling, and instant iteration without new issues.
 
 ## 7 · Report
 
