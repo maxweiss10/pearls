@@ -5,13 +5,21 @@ description: Add or edit entries in Max's Pearl clinical study-notes site. Turns
 
 # Pearl — study notes (claude.ai edition)
 
-**Pearl** is Max's supplementary White Book: UCSF-specific and rotation-acquired knowledge that is NOT already in the MGH White Book. Live at https://maxweiss10.github.io/pearl-study-notes/ (repo `maxweiss10/pearl-study-notes`).
+**Pearl** is Max's supplementary White Book: UCSF-specific and rotation-acquired knowledge that is NOT already in the MGH White Book. Live at https://maxweiss10.github.io/pearls/ (repo `maxweiss10/pearls`).
 
 Every entry is REAL TEXT — selectable, searchable, highlightable. Never a screenshot of text, never a rendered PNG of a recreated diagram.
 
 ## What this skill does here
 
-claude.ai cannot commit to GitHub (the GitHub connector is read-only). So this skill **produces the exact files to drop in**, and hands over copy-paste-ready instructions:
+**Say this FIRST, before doing any work** — one line, then carry on without waiting for an answer:
+
+> Heads up: in a normal chat I can't commit — I'll hand you the files to paste. To have it posted automatically instead, start this from the **Code** tab with the `maxweiss10/pearls` repo selected (works on phone too) and re-send.
+
+Do NOT save this for the end. Max's recurring complaint is doing several rounds of edits and only then learning nothing was posted. He may well answer "just give me the files" — fine, continue — but he decides that up front, not after the work.
+
+A **Code**-tab session with the repo attached loads `.claude/skills/pearls/` from the repo itself and writes + commits + pushes in one step. That is the real `/pearls`. This file is the degraded fallback for plain chat, where there is no git checkout (the GitHub connector is read-only).
+
+So here this skill **produces the exact files to drop in**, and hands over copy-paste-ready instructions:
 
 1. An **entry fragment** → becomes `entries/{id}.html`
 2. A **manifest row** → gets pasted into `manifest.json`
@@ -19,7 +27,7 @@ claude.ai cannot commit to GitHub (the GitHub connector is read-only). So this s
 
 Create both as downloadable files when file creation is available; otherwise print them in fenced code blocks.
 
-If the GitHub connector is enabled and `maxweiss10/pearl-study-notes` is added, READ `manifest.json` first for current sections and entry ids, and read a recent entry (e.g. `entries/2026-07-18-icu-pressors.html`) to match house style. If it isn't connected, ask Max to paste the current `sections` array — or proceed and flag that the section list is unverified.
+If the GitHub connector is enabled and `maxweiss10/pearls` is added, READ `manifest.json` first for current sections and entry ids, and read a recent entry (e.g. `entries/2026-07-18-icu-pressors.html`) to match house style. If it isn't connected, ask Max to paste the current `sections` array — or proceed and flag that the section list is unverified.
 
 ## 1 · Read the request — plain words, no fixed grammar
 
@@ -72,18 +80,18 @@ State plainly: paste it as the **first object inside the `entries` array** (newe
 ## 6 · Delivery — how Max lands it
 
 **a. Adding an entry (phone or desktop, no git):**
-1. Open https://github.com/maxweiss10/pearl-study-notes
+1. Open https://github.com/maxweiss10/pearls
 2. `entries/` → **Add file → Create new file** → name it `{id}.html` → paste the fragment
 3. Back to root → click `manifest.json` → pencil icon → paste the row as the first item in `entries`
 4. **Commit changes** on both (message: `Pearl: {TITLE}`)
-5. Site rebuilds in ~1 minute at https://maxweiss10.github.io/pearl-study-notes/#{id}
+5. Site rebuilds in ~1 minute at https://maxweiss10.github.io/pearls/#{id}
 
 **b. Raw photo entries:** upload the images to `entries/img/` as `{id}-1.jpg`, `{id}-2.jpg` … (Add file → Upload files) before committing the fragment.
 
 **c. Deleting (only after confirmation):** open `entries/{id}.html` → trash icon → commit; then edit `manifest.json` and remove that object (and the section from `sections` if it's now empty).
 
-**d. Faster path, when he's at his Mac:** Claude Code has the full `/pearls` skill and does all of this — write, commit, push — in one step. Mention this only if he asks; don't push it.
+**d. The path that skips all of the above:** a **Code**-tab session with `maxweiss10/pearls` selected — on phone or desktop — or Claude Code on his Mac. Both run the repo's own `/pearls` and write, commit, and push in one step. This was already flagged up top; repeat it here in one line so the manual steps always end with the alternative in view.
 
 ## 7 · Report
 
-One line per entry: title, section, and the anchor URL `https://maxweiss10.github.io/pearl-study-notes/#{id}`. For edits or deletes, say exactly what changed.
+One line per entry: title, section, and the anchor URL `https://maxweiss10.github.io/pearls/#{id}`. For edits or deletes, say exactly what changed.

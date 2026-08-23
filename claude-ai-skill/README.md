@@ -4,9 +4,9 @@
 
 **Install:** claude.ai → Settings → enable **code execution / file creation** → **Customize → Skills → Add** → upload `pearls-skill.zip`.
 
-**What it does:** produces the finished `entries/{id}.html` fragment plus its `manifest.json` row, with copy-paste instructions for committing via GitHub's web UI. It cannot commit for you — the claude.ai GitHub connector is read-only. Add `maxweiss10/pearl-study-notes` as a connector source so it can read current sections and match house style.
+**What it does:** produces the finished `entries/{id}.html` fragment plus its `manifest.json` row, with copy-paste instructions for committing via GitHub's web UI. It cannot commit for you — the claude.ai GitHub connector is read-only. It is told to say so in its first reply, before doing the work. Add `maxweiss10/pearls` as a connector source so it can read current sections and match house style.
 
-**Compare:** Claude Code (Mac) and claude.ai/code run `.claude/skills/pearls/`, which writes and pushes in one step.
+**Use this only when you can't use a Code session.** The `.claude/skills/pearls/` copy in this repo writes, commits, and pushes in one step, and it loads anywhere the repo is checked out: Claude Code on the Mac, **and claude.ai → Code tab → select `maxweiss10/pearls` → works on phone**. That last one is the intended phone workflow; this zip is the fallback for plain chat.
 
 **Editing:** source of truth for the site's design doctrine is `.claude/skills/pearls/SKILL.md`. When that changes, mirror the relevant parts into `claude-ai-skill/pearls/reference/design-system.md` and re-zip:
 
