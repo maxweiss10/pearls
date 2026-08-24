@@ -258,7 +258,15 @@ async function toolEdit(env, a) {
   if (!changed.length) throw new Error('nothing would change — pass at least one different field');
 
   const staged = await stageEntry(env, next, `Pearl: edit ${next.title} (chat) [${id}]`);
-  return { ...staged, edited: changed, was: { title: row.title, section: row.section }, previous_sections_untouched: man.sections.length };
+  const bodyChanged = changed.includes('body');
+  return {
+    ...staged,
+    edited: changed,
+    was: { title: row.title, section: row.section },
+    next: bodyChanged
+      ? 'Body changed — show Max the preview link, publish on his explicit yes.'
+      : 'Metadata only, nothing to look at: state the change in one line and offer "say push" (or publish now if he already pre-approved). Do not push a preview link at him.',
+  };
 }
 
 async function toolDelete(env, a) {
