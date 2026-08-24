@@ -84,7 +84,7 @@ async function toolStatus(env, a) {
   };
 }
 
-async function toolStage(env, a) {
+async function stageEntry(env, a, message) {
   const errs = [];
   if (!/^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/.test(a.id || '')) errs.push('bad id (YYYY-MM-DD-slug)');
   for (const k of ['title', 'section', 'date', 'keywords', 'html'])
@@ -148,7 +148,7 @@ async function toolStage(env, a) {
 
   const newTree = await gh(env, 'POST', '/git/trees', { base_tree: mainCommit.tree.sha, tree });
   const commit = await gh(env, 'POST', '/git/commits', {
-    message: `Pearl: ${a.title} (chat) [${a.id}]`,
+    message: message || `Pearl: ${a.title} (chat) [${a.id}]`,
     tree: newTree.sha,
     parents: [mainRef.object.sha],
   });
@@ -174,6 +174,8 @@ async function toolStage(env, a) {
   };
 }
 
+async function toolStage(env, a) { return stageEntry(env, a); }
+
 async function toolPublish(env) {
   const draft = await getDraft(env);
   if (!draft) throw new Error('no pending draft — stage_pearl first');
@@ -192,6 +194,102 @@ async function toolDiscard(env) {
   if (!draft) return { discarded: null, note: 'no pending draft' };
   await gh(env, 'DELETE', '/git/refs/heads/draft');
   return { discarded: draft.message };
+}
+
+
+/* ---------- read / edit / delete ---------- */
+
+async function commitTree(env, branch, tree, message, parentSha) {
+  const newTree = await gh(env, 'POST', '/git/trees', { base_tree: parentSha.treeSha, tree });
+  const commit = await gh(env, 'POST', '/git/commits', {
+    message, tree: newTree.sha, parents: [parentSha.commitSha],
+  });
+  const res = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/${branch}`, {
+    method: 'PATCH',
+    headers: { authorization: `Bearer ${env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'user-agent': 'pearl-mcp', 'content-type': 'application/json' },
+    body: JSON.stringify({ sha: commit.sha, force: branch === 'draft' }),
+  });
+  if (!res.ok) {
+    if (branch === 'draft') { await gh(env, 'POST', '/git/refs', { ref: 'refs/heads/draft', sha: commit.sha }); return commit.sha; }
+    throw new Error('someone else pushed while this ran — try again');
+  }
+  return commit.sha;
+}
+
+async function headOf(env, branch) {
+  const ref = await gh(env, 'GET', `/git/ref/heads/${branch}`);
+  const c = await gh(env, 'GET', `/git/commits/${ref.object.sha}`);
+  return { commitSha: ref.object.sha, treeSha: c.tree.sha };
+}
+
+async function loadEntry(env, id, ref) {
+  const manifestFile = await gh(env, 'GET', `/contents/manifest.json?ref=${ref}`);
+  const man = JSON.parse(b64decodeUtf8(manifestFile.content));
+  const row = man.entries.find((e) => e.id === id);
+  if (!row) throw new Error(`no entry with id "${id}" on ${ref} — call pearl_status for the current entry_ids`);
+  const file = await gh(env, 'GET', `/contents/entries%2F${encodeURIComponent(id)}.html?ref=${ref}`);
+  if (file._status === 404) throw new Error(`manifest lists "${id}" but entries/${id}.html is missing`);
+  return { man, row, html: b64decodeUtf8(file.content) };
+}
+
+async function toolGet(env, a) {
+  const id = String(a.id || '');
+  const { row, html } = await loadEntry(env, id, 'main');
+  return { ...row, html, note: 'Edit this html (or any field) and pass it to edit_pearl. Keep the id.' };
+}
+
+async function toolEdit(env, a) {
+  const id = String(a.id || '');
+  const { man, row, html } = await loadEntry(env, id, 'main');
+
+  const next = {
+    id,
+    title: a.title !== undefined ? a.title : row.title,
+    date: a.date !== undefined ? a.date : row.date,
+    section: a.section !== undefined ? a.section : row.section,
+    keywords: a.keywords !== undefined ? a.keywords : row.keywords,
+    html: a.html !== undefined ? String(a.html).trim() : html.trim(),
+  };
+  if (a.source !== undefined) next.source = a.source; else if (row.source) next.source = row.source;
+
+  const changed = [];
+  ['title', 'date', 'section', 'keywords'].forEach((k) => { if (next[k] !== row[k]) changed.push(k); });
+  if (next.html !== html.trim()) changed.push('body');
+  if (!changed.length) throw new Error('nothing would change — pass at least one different field');
+
+  const staged = await stageEntry(env, next, `Pearl: edit ${next.title} (chat) [${id}]`);
+  return { ...staged, edited: changed, was: { title: row.title, section: row.section }, previous_sections_untouched: man.sections.length };
+}
+
+async function toolDelete(env, a) {
+  const id = String(a.id || '');
+  const { man, row } = await loadEntry(env, id, 'main');
+  if (a.expect_title && String(a.expect_title).trim() !== row.title) {
+    throw new Error(`refusing to delete: you named "${a.expect_title}" but id ${id} is "${row.title}". Re-check with the user which entry they mean.`);
+  }
+
+  man.entries = man.entries.filter((e) => e.id !== id);
+  const sectionNowEmpty = !man.entries.some((e) => e.section === row.section);
+  if (sectionNowEmpty) man.sections = man.sections.filter((sec) => sec !== row.section);
+
+  const imgs = await gh(env, 'GET', '/contents/entries%2Fimg?ref=main');
+  const mine = (Array.isArray(imgs) ? imgs : []).filter((f) => f.name.startsWith(`${id}-`));
+
+  const tree = [
+    { path: `entries/${id}.html`, mode: '100644', type: 'blob', sha: null },
+    { path: 'manifest.json', mode: '100644', type: 'blob', content: JSON.stringify(man, null, 2) },
+    ...mine.map((f) => ({ path: f.path, mode: '100644', type: 'blob', sha: null })),
+  ];
+  const head = await headOf(env, 'main');
+  await commitTree(env, 'main', tree, `Pearl: delete ${row.title}`, head);
+  return {
+    deleted: row.title,
+    id,
+    images_removed: mine.map((f) => f.name),
+    section_removed: sectionNowEmpty ? row.section : undefined,
+    recoverable: 'still in git history — `git revert` on the delete commit restores it',
+    note: 'Live site drops it on the next Pages rebuild (~1 min).',
+  };
 }
 
 /* ---------- MCP plumbing (streamable HTTP, stateless) ---------- */
@@ -221,6 +319,40 @@ const TOOLS = [
     },
   },
   {
+    name: 'get_pearl',
+    description: 'Fetch one published entry from the live site — its manifest row plus the full HTML fragment. Call this BEFORE edit_pearl so you are editing the real current text rather than guessing at it.',
+    inputSchema: { type: 'object', required: ['id'], properties: { id: { type: 'string' } } },
+  },
+  {
+    name: 'edit_pearl',
+    description: 'Change an existing published entry — fix wording, retitle, move it to another section, adjust keywords, or replace the body. Pass only the fields that change; everything else is kept. The id and filename never move, so links keep working. This STAGES the edited version on the draft branch and returns a preview link exactly like stage_pearl — the live entry is untouched until Max approves and you call publish_pearl. Call get_pearl first to work from the current text.',
+    inputSchema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'string', description: 'the entry to edit — unchanged by the edit' },
+        title: { type: 'string' },
+        date: { type: 'string', description: 'YYYY-MM-DD' },
+        section: { type: 'string', description: 'set this to move the entry between sections' },
+        keywords: { type: 'string' },
+        source: { type: 'string' },
+        html: { type: 'string', description: 'full replacement fragment; omit to keep the current body' },
+      },
+    },
+  },
+  {
+    name: 'delete_pearl',
+    description: 'Permanently remove a published entry from the live site — its fragment, its images, and its manifest row (and its section, if it was the last entry there). This is the ONLY destructive tool and it goes straight to the live site with no draft or preview. NEVER call it without naming the entry (title, section, date) to Max and getting an explicit yes first. Pass expect_title as a safety interlock — it must match the stored title or the delete is refused. Deleted entries remain recoverable from git history.',
+    inputSchema: {
+      type: 'object',
+      required: ['id'],
+      properties: {
+        id: { type: 'string' },
+        expect_title: { type: 'string', description: 'the title you told Max you were deleting; mismatch aborts' },
+      },
+    },
+  },
+  {
     name: 'publish_pearl',
     description: 'Publish the pending draft to the live site. Call ONLY after Max has seen the preview and explicitly said push/yes/ship — never on your own judgment.',
     inputSchema: { type: 'object', properties: {} },
@@ -237,6 +369,9 @@ async function callTool(env, name, args) {
   switch (name) {
     case 'pearl_status': return toolStatus(env, args || {});
     case 'stage_pearl': return toolStage(env, args || {});
+    case 'get_pearl': return toolGet(env, args || {});
+    case 'edit_pearl': return toolEdit(env, args || {});
+    case 'delete_pearl': return toolDelete(env, args || {});
     case 'publish_pearl': return toolPublish(env);
     case 'discard_pearl': return toolDiscard(env);
     default: throw new Error(`unknown tool: ${name}`);
