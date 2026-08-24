@@ -53,7 +53,19 @@ const idFromMessage = (m) => ((m || '').match(/\[([a-z0-9-]+)\]\s*$/) || [])[1] 
 
 /* ---------- tools ---------- */
 
-async function toolStatus(env) {
+async function toolStatus(env, a) {
+  /* wait_for_photo: block server-side until Max's paste lands (up to ~22 s),
+     so one assistant turn can hand over the link AND pick the photo up. */
+  let waited = false;
+  if (a && a.wait_for_photo) {
+    const deadline = Date.now() + 22000;
+    for (;;) {
+      const probe = await gh(env, 'GET', '/contents/entries%2Fimg%2Finbox?ref=main');
+      if (Array.isArray(probe) && probe.length) break;
+      if (Date.now() > deadline) { waited = true; break; }
+      await new Promise((r) => setTimeout(r, 2500));
+    }
+  }
   const [draft, manifest, inbox] = await Promise.all([
     getDraft(env),
     gh(env, 'GET', '/contents/manifest.json?ref=main'),
@@ -67,7 +79,8 @@ async function toolStatus(env) {
     entry_ids: man.entries.map((e) => e.id),
     inbox_photos: photos,
     drop_page: env.DROP_KEY ? `${WORKER}/${env.DROP_KEY}/drop` : null,
-    drop_page_note: 'Give Max this link ONLY when an entry needs the actual image. He pastes (or snaps) there; the photo lands in inbox_photos within seconds. Then stage with use_inbox_photos:true.',
+    drop_page_note: 'Give Max this link ONLY when an entry needs the actual image. He pastes (or snaps) there; the photo lands in inbox_photos within seconds.',
+    timed_out_waiting: waited && !photos.length ? true : undefined,
   };
 }
 
@@ -186,8 +199,8 @@ async function toolDiscard(env) {
 const TOOLS = [
   {
     name: 'pearl_status',
-    description: 'Current state of the Pearl site repo: pending draft (if any), the section list, existing entry ids, and any photos waiting in the inbox. Call before staging.',
-    inputSchema: { type: 'object', properties: {} },
+    description: 'Current state of the Pearl site repo: pending draft (if any), the section list, existing entry ids, any photos waiting in the inbox, and drop_page (the paste link for photos). Call before staging. Set wait_for_photo:true right after giving Max the drop_page link — the call then blocks until his paste arrives (up to ~22 s), so you can hand over the link and pick the photo up in the SAME turn instead of asking him to report back. If it returns timed_out_waiting, just call again.',
+    inputSchema: { type: 'object', properties: { wait_for_photo: { type: 'boolean' } } },
   },
   {
     name: 'stage_pearl',
@@ -222,7 +235,7 @@ const TOOLS = [
 async function callTool(env, name, args) {
   if (!env.GITHUB_TOKEN) throw new Error('GITHUB_TOKEN secret is not configured yet — Max needs to run: npx wrangler secret put GITHUB_TOKEN (from worker/pearl-mcp in the pearls repo)');
   switch (name) {
-    case 'pearl_status': return toolStatus(env);
+    case 'pearl_status': return toolStatus(env, args || {});
     case 'stage_pearl': return toolStage(env, args || {});
     case 'publish_pearl': return toolPublish(env);
     case 'discard_pearl': return toolDiscard(env);
@@ -272,6 +285,14 @@ export default {
     if (env.DROP_KEY && url.pathname === `/${env.DROP_KEY}/drop`) {
       if (request.method === 'GET') {
         return new Response(DROP_PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+      }
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-methods': 'POST, OPTIONS',
+          'access-control-allow-headers': 'content-type',
+          'access-control-max-age': '86400',
+        }});
       }
       if (request.method === 'POST') return handleDrop(request, env);
       return new Response('method not allowed', { status: 405 });
@@ -378,6 +399,8 @@ h1{font-size:19px;margin:0 0 2px;letter-spacing:-.01em}
 .btn{display:inline-block;margin-top:14px;padding:12px 20px;border:0;border-radius:9px;
   background:#171A1F;color:#fff;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
 .btn:active{opacity:.85}
+.btn.alt{background:#fff;color:#171A1F;border:1px solid #C9CFD6;margin-left:8px}
+@media (max-width:420px){.btn,.btn.alt{display:block;width:100%;margin:10px 0 0}}
 #log{margin-top:18px}
 .item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #EBEDF0;font-size:14px}
 .item img{width:44px;height:44px;object-fit:cover;border-radius:6px;background:#EBEDF0;flex:none}
@@ -389,17 +412,20 @@ input[type=file]{display:none}
 </style></head><body>
 <div class="wrap">
   <h1>Drop a photo into Pearl</h1>
-  <p class="sub">Paste it, drag it, or take one — it goes straight to your notes' inbox. Then tell Claude it's there.</p>
+  <p class="sub">Paste it, drag it, or take one. Claude is already waiting for it — no need to go back and tell it.</p>
 
   <div id="zone">
-    <b>Paste here &nbsp;<kbd>⌘V</kbd></b>
+    <b id="hdr">Paste here &nbsp;<kbd>⌘V</kbd></b>
     <span>or drag an image in</span>
-    <div><button class="btn" id="pick" type="button">Choose photo / Take photo</button></div>
+    <div>
+      <button class="btn" id="clip" type="button">Paste from clipboard</button>
+      <button class="btn alt" id="pick" type="button">Photo / Camera</button>
+    </div>
   </div>
   <input type="file" id="file" accept="image/*" multiple>
 
   <div id="log"></div>
-  <div class="done" id="done"><b>Saved.</b> Go back to Claude and say <b>“it’s in the inbox”</b> — it will pick the photo up from there.</div>
+  <div class="done" id="done"><b>Saved.</b> Claude is picking it up right now — head back to the chat for your preview link.</div>
 </div>
 <script>
 const zone=document.getElementById('zone'),log=document.getElementById('log'),
@@ -440,8 +466,33 @@ async function send(files){
 
 document.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])];
   if(f.length){e.preventDefault();send(f);}});
+
+/* Read the clipboard directly. Once the browser has granted this origin
+   clipboard-read, the auto-attempt on load means opening the link is the
+   whole interaction — no keystroke at all. Falls back silently everywhere. */
+async function fromClipboard(){
+  if(!navigator.clipboard||!navigator.clipboard.read)return false;
+  try{
+    const items=await navigator.clipboard.read();
+    const files=[];
+    for(const it of items){
+      const type=it.types.find(t=>t.startsWith('image/'));
+      if(!type)continue;
+      const blob=await it.getType(type);
+      files.push(new File([blob],'clipboard.'+type.split('/')[1],{type}));
+    }
+    if(files.length){send(files);return true;}
+  }catch(err){/* not granted / no gesture / empty — fine */}
+  return false;
+}
+document.getElementById('clip').addEventListener('click',async e=>{e.stopPropagation();
+  if(!await fromClipboard())alert('Nothing to paste — copy an image first, or use Photo / Camera.');});
 zone.addEventListener('click',()=>fileIn.click());
 document.getElementById('pick').addEventListener('click',e=>{e.stopPropagation();fileIn.click();});
+/* zero-click path when permission is already granted */
+navigator.permissions?.query({name:'clipboard-read'}).then(p=>{
+  if(p.state==='granted')fromClipboard();
+}).catch(()=>{});
 fileIn.addEventListener('change',()=>{send(fileIn.files);fileIn.value='';});
 ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('hot');}));
 ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('hot');}));
