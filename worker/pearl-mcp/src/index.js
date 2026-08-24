@@ -239,6 +239,16 @@ async function handleRpc(env, msg) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    /* Paste target: GET serves the drop page, POST accepts images → inbox on main. */
+    if (env.DROP_KEY && url.pathname === `/${env.DROP_KEY}/drop`) {
+      if (request.method === 'GET') {
+        return new Response(DROP_PAGE, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+      }
+      if (request.method === 'POST') return handleDrop(request, env);
+      return new Response('method not allowed', { status: 405 });
+    }
+
     if (!env.PATH_KEY || url.pathname !== `/${env.PATH_KEY}/mcp`) {
       return new Response('not found', { status: 404 });
     }
@@ -270,3 +280,142 @@ function respond(res, request) {
     headers: { ...headers, 'content-type': 'text/event-stream', 'cache-control': 'no-store' },
   });
 }
+
+
+/* ---------- paste target ---------- */
+
+async function handleDrop(request, env) {
+  if (!env.GITHUB_TOKEN) return Response.json({ error: 'server not configured' }, { status: 500 });
+  let body;
+  try { body = await request.json(); } catch { return Response.json({ error: 'bad request' }, { status: 400 }); }
+  const images = Array.isArray(body && body.images) ? body.images.slice(0, 10) : [];
+  if (!images.length) return Response.json({ error: 'no images' }, { status: 400 });
+
+  /* base64 → blob on the repo */
+  const shas = [];
+  for (const img of images) {
+    const b64 = String(img.b64 || '').split(',').pop();
+    if (!b64 || b64.length > 12_000_000) return Response.json({ error: 'image too large' }, { status: 413 });
+    const blob = await gh(env, 'POST', '/git/blobs', { content: b64, encoding: 'base64' });
+    shas.push(blob.sha);
+  }
+
+  /* commit them into entries/img/inbox/ on main, numbering after whatever is there */
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const inbox = await gh(env, 'GET', '/contents/entries%2Fimg%2Finbox?ref=main');
+    let n = Array.isArray(inbox) ? inbox.length : 0;
+    const ref = await gh(env, 'GET', '/git/ref/heads/main');
+    const commitObj = await gh(env, 'GET', `/git/commits/${ref.object.sha}`);
+    const stamp = String(Date.now()).slice(-6);
+    const paths = shas.map((sha) => {
+      n++;
+      return { path: `entries/img/inbox/drop${stamp}-${n}.jpg`, mode: '100644', type: 'blob', sha };
+    });
+    const tree = await gh(env, 'POST', '/git/trees', { base_tree: commitObj.tree.sha, tree: paths });
+    const commit = await gh(env, 'POST', '/git/commits', {
+      message: `Pearl inbox: ${paths.length} photo${paths.length > 1 ? 's' : ''} pasted`,
+      tree: tree.sha,
+      parents: [ref.object.sha],
+    });
+    const patch = await fetch(`https://api.github.com/repos/${REPO}/git/refs/heads/main`, {
+      method: 'PATCH',
+      headers: { authorization: `Bearer ${env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'user-agent': 'pearl-mcp', 'content-type': 'application/json' },
+      body: JSON.stringify({ sha: commit.sha }),
+    });
+    if (patch.ok) return Response.json({ saved: paths.map((p) => p.path) });
+  }
+  return Response.json({ error: 'repo busy — try again' }, { status: 503 });
+}
+
+const DROP_PAGE = `<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pearl — drop a photo</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pearl Drop">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a3a5c'/><circle cx='50' cy='54' r='26' fill='%23fff'/><circle cx='42' cy='46' r='9' fill='%23dfe6ee'/></svg>">
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;font:15px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:#171A1F;background:#fff;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto}
+h1{font-size:19px;margin:0 0 2px;letter-spacing:-.01em}
+.sub{color:#5C6672;font-size:13px;margin:0 0 18px}
+#zone{border:2px dashed #C9CFD6;border-radius:12px;padding:34px 20px;text-align:center;
+  background:#FAFBFC;transition:border-color .15s,background .15s;cursor:pointer}
+#zone.hot{border-color:#1a3a5c;background:#F2F6FA}
+#zone b{display:block;font-size:16px;margin-bottom:4px}
+#zone span{color:#5C6672;font-size:13px}
+.btn{display:inline-block;margin-top:14px;padding:12px 20px;border:0;border-radius:9px;
+  background:#171A1F;color:#fff;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.btn:active{opacity:.85}
+#log{margin-top:18px}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #EBEDF0;font-size:14px}
+.item img{width:44px;height:44px;object-fit:cover;border-radius:6px;background:#EBEDF0;flex:none}
+.ok{color:#1F6B45;font-weight:600}.err{color:#A61B1B;font-weight:600}.pend{color:#5C6672}
+.done{margin-top:18px;padding:13px 15px;border-left:3px solid #171A1F;background:#FAFBFC;
+  border-radius:0 8px 8px 0;font-size:14px;display:none}
+.done.show{display:block}
+input[type=file]{display:none}
+</style></head><body>
+<div class="wrap">
+  <h1>Drop a photo into Pearl</h1>
+  <p class="sub">Paste it, drag it, or take one — it goes straight to your notes' inbox. Then tell Claude it's there.</p>
+
+  <div id="zone">
+    <b>Paste here &nbsp;<kbd>⌘V</kbd></b>
+    <span>or drag an image in</span>
+    <div><button class="btn" id="pick" type="button">Choose photo / Take photo</button></div>
+  </div>
+  <input type="file" id="file" accept="image/*" multiple>
+
+  <div id="log"></div>
+  <div class="done" id="done"><b>Saved.</b> Go back to Claude and say <b>“it’s in the inbox”</b> — it will pick the photo up from there.</div>
+</div>
+<script>
+const zone=document.getElementById('zone'),log=document.getElementById('log'),
+      fileIn=document.getElementById('file'),done=document.getElementById('done');
+
+function row(name){const d=document.createElement('div');d.className='item';
+  d.innerHTML='<img><span style="flex:1">'+name+'</span><span class="pend">saving…</span>';
+  log.appendChild(d);return d;}
+
+/* Resize to <=1600px and re-encode as JPEG: strips EXIF/GPS and keeps the repo small. */
+function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();
+  fr.onload=()=>{const im=new Image();
+    im.onload=()=>{const s=Math.min(1,1600/Math.max(im.width,im.height));
+      const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      res({b64:c.toDataURL('image/jpeg',0.85),thumb:c.toDataURL('image/jpeg',0.4)});};
+    im.onerror=rej;im.src=fr.result;};
+  fr.onerror=rej;fr.readAsDataURL(file);});}
+
+async function send(files){
+  const list=[...files].filter(f=>f&&f.type.startsWith('image/')).slice(0,10);
+  if(!list.length)return;
+  const rows=list.map(f=>row(f.name||'pasted image'));
+  try{
+    const shrunk=await Promise.all(list.map(shrink));
+    shrunk.forEach((s,i)=>{rows[i].querySelector('img').src=s.thumb;});
+    const r=await fetch(location.pathname,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({images:shrunk.map(s=>({b64:s.b64}))})});
+    const j=await r.json();
+    if(!r.ok)throw new Error(j.error||'upload failed');
+    rows.forEach(x=>{x.lastElementChild.className='ok';x.lastElementChild.textContent='saved ✓';});
+    done.classList.add('show');
+  }catch(e){
+    rows.forEach(x=>{x.lastElementChild.className='err';x.lastElementChild.textContent='failed';});
+    alert('Upload failed: '+e.message);
+  }
+}
+
+document.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])];
+  if(f.length){e.preventDefault();send(f);}});
+zone.addEventListener('click',()=>fileIn.click());
+document.getElementById('pick').addEventListener('click',e=>{e.stopPropagation();fileIn.click();});
+fileIn.addEventListener('change',()=>{send(fileIn.files);fileIn.value='';});
+['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('hot');}));
+['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('hot');}));
+zone.addEventListener('drop',e=>send(e.dataTransfer.files));
+</script></body></html>`;
