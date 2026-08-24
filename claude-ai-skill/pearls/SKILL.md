@@ -16,7 +16,9 @@ Every entry is REAL TEXT — selectable, searchable, highlightable. Never a scre
 1. `pearl_status` first — current sections, existing ids (avoid collisions), pending draft, inbox photos. (Skip the §0 web fetches; status is fresher.)
 2. Build the entry, then `stage_pearl` — it stages the draft branch and returns the **preview link**. Give Max that link.
 3. On his EXPLICIT approval of the preview (push/yes/ship) → `publish_pearl`. Never call it unprompted — staging is yours, publishing is his. `discard_pearl` if he drops it.
-4. Photos (raw/figure entries): Max attaches them to https://github.com/maxweiss10/pearls/issues/new?title=photos (the one unavoidable hop — chat can't transmit image bytes); when `pearl_status` shows them in `inbox_photos`, call `stage_pearl` with `use_inbox_photos: true` and reference `entries/img/{id}-N.jpg` (filename order) in the fragment.
+4. Photos (raw/figure entries only): chat can't transmit image bytes, so Max delivers them separately — but it's one paste, not a file hunt. Give him the `drop_page` URL from `pearl_status` (never hardcode it; it carries a secret key and this repo is public) with one line: **"paste the screenshot there (⌘V) — or tap it on your phone to snap the photo"**. Then re-call `pearl_status` until `inbox_photos` is non-empty (a few seconds; if he says he's done and it's still empty, ask him to check the page said "saved"). Then `stage_pearl` with `use_inbox_photos: true`, referencing `entries/img/{id}-N.jpg` in filename order in the fragment. Ask for the photo BEFORE writing the entry so he can paste while you work.
+
+   Suggest once, the first time in a conversation: bookmarking the drop page (or Add to Home Screen on iPhone) makes it a one-tap habit.
 
 **Lane 2 — publish-by-issue (fallback when the connector is unavailable).** Build the entry, hand Max one prefilled issue link (§4-5). He taps Submit; the `pearl-publish` Action stages the draft and comments the preview link; he replies **push** on the issue (or **discard**). Nothing goes live without the push.
 
@@ -87,7 +89,7 @@ The default is real text; an image of text is dead weight, unsearchable and unhi
 
 Rules for both:
 
-- **Photos travel out-of-band.** Lane 1: photo-inbox issue + `use_inbox_photos` (see the lanes section). Lane 2: tell Max to attach the photo(s) with 📎 in the pearl issue composer, **in display order**, then Submit. The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
+- **Photos travel out-of-band.** Lane 1: the `drop_page` paste target + `use_inbox_photos` (see the lanes section) — one ⌘V, no file picker. Lane 2: tell Max to attach the photo(s) with 📎 in the pearl issue composer (paste works there too), **in display order**, then Submit. The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
 - **Alt text does the searching.** The pixels contribute nothing to the site index — the alt text carries every drug, dose, arrow, and label in a sentence or two. Never "photo of whiteboard". Push the same terms into the keywords.
 - **Flag once, then proceed.** If the image is mostly typed text, say in one line that the alt text will be doing the searching — then build it exactly as asked. Don't re-litigate.
 - Photo entries still get a real title, section, and keywords. The raw path skips the redesign, not the metadata.

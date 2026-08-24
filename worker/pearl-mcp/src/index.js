@@ -12,6 +12,7 @@
 
 const REPO = 'maxweiss10/pearls';
 const SITE = 'https://maxweiss10.github.io/pearls/';
+const WORKER = 'https://pearl-mcp.maxweiss10.workers.dev';
 
 /* ---------- GitHub API ---------- */
 
@@ -59,11 +60,14 @@ async function toolStatus(env) {
     gh(env, 'GET', '/contents/entries%2Fimg%2Finbox?ref=main'),
   ]);
   const man = JSON.parse(b64decodeUtf8(manifest.content));
+  const photos = Array.isArray(inbox) ? inbox.map((f) => f.name) : [];
   return {
     pending_draft: draft ? { title: draft.message, preview: idFromMessage(draft.message) ? `${SITE}#draft=${idFromMessage(draft.message)}` : null } : null,
     sections: man.sections,
     entry_ids: man.entries.map((e) => e.id),
-    inbox_photos: Array.isArray(inbox) ? inbox.map((f) => f.name) : [],
+    inbox_photos: photos,
+    drop_page: env.DROP_KEY ? `${WORKER}/${env.DROP_KEY}/drop` : null,
+    drop_page_note: 'Give Max this link ONLY when an entry needs the actual image. He pastes (or snaps) there; the photo lands in inbox_photos within seconds. Then stage with use_inbox_photos:true.',
   };
 }
 
