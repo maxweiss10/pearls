@@ -99,17 +99,38 @@ async function toolStage(env, a) {
     { path: 'manifest.json', mode: '100644', type: 'blob', content: JSON.stringify(man, null, 2) },
   ];
 
+  /* Wire up images automatically: whatever the fragment references but doesn't
+     already exist gets filled, in order, from the photos waiting in the inbox.
+     No flag to forget — a fragment can never ship pointing at a missing file. */
+  const referenced = [...html.matchAll(/src="entries\/img\/([^"\/]+)"/g)].map((m) => m[1]);
   let imageCount = 0;
-  if (a.use_inbox_photos) {
-    const inbox = await gh(env, 'GET', '/contents/entries%2Fimg%2Finbox?ref=main');
-    const files = (Array.isArray(inbox) ? inbox : []).sort((x, y) => x.name.localeCompare(y.name));
-    for (const f of files) {
-      imageCount++;
-      const ext = (f.name.match(/\.\w+$/) || ['.jpg'])[0];
-      tree.push({ path: `entries/img/${a.id}-${imageCount}${ext}`, mode: '100644', type: 'blob', sha: f.sha });
-      tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null });
+  let inboxRemaining = [];
+  const imagesUsed = [];
+  if (referenced.length) {
+    const [existingRaw, inboxRaw] = await Promise.all([
+      gh(env, 'GET', '/contents/entries%2Fimg?ref=main'),
+      gh(env, 'GET', '/contents/entries%2Fimg%2Finbox?ref=main'),
+    ]);
+    const existing = new Set((Array.isArray(existingRaw) ? existingRaw : []).map((f) => f.name));
+    const missing = referenced.filter((n) => !existing.has(n));
+    const inbox = (Array.isArray(inboxRaw) ? inboxRaw : []).sort((x, y) => x.name.localeCompare(y.name));
+
+    if (missing.length > inbox.length) {
+      const short = missing.length - inbox.length;
+      throw new Error(
+        `the entry references ${missing.length} image(s) that aren't in the repo yet and only ${inbox.length} are waiting in the inbox — ` +
+        `ask Max to paste ${short} more at the drop page (pearl_status → drop_page), then call stage_pearl again. ` +
+        `Nothing was staged, so no broken preview.`
+      );
     }
-    if (!imageCount) throw new Error('use_inbox_photos was set but the inbox is empty — have Max attach photo(s) to a new issue titled "photos" at https://github.com/maxweiss10/pearls/issues/new?title=photos, then retry');
+    missing.forEach((name, i) => {
+      const src = inbox[i];
+      imageCount++;
+      imagesUsed.push(`${src.name} → ${name}`);
+      tree.push({ path: `entries/img/${name}`, mode: '100644', type: 'blob', sha: src.sha });
+      tree.push({ path: src.path, mode: '100644', type: 'blob', sha: null }); /* clear from inbox */
+    });
+    inboxRemaining = inbox.slice(missing.length).map((f) => f.name);
   }
 
   const newTree = await gh(env, 'POST', '/git/trees', { base_tree: mainCommit.tree.sha, tree });
@@ -132,6 +153,9 @@ async function toolStage(env, a) {
     staged: a.title,
     preview: `${SITE}#draft=${a.id}`,
     images_attached: imageCount,
+    images_used: imagesUsed.length ? imagesUsed : undefined,
+    inbox_left_over: inboxRemaining.length ? inboxRemaining : undefined,
+    images_note: imageCount ? 'Inbox photos are claimed by this draft and clear from the inbox when it publishes. If Max pasted these for a DIFFERENT entry, discard and re-stage.' : undefined,
     replaced_pending_draft: prev && idFromMessage(prev.message) !== a.id ? prev.message : null,
     next: 'Show Max the preview link. Publish ONLY after he explicitly approves (push/yes/ship).',
   };
@@ -167,7 +191,7 @@ const TOOLS = [
   },
   {
     name: 'stage_pearl',
-    description: 'Stage one Pearl entry on the draft branch and get back a preview link. Replaces any pending draft. NEVER publishes — the entry goes live only via publish_pearl after Max explicitly approves the preview. Set use_inbox_photos when the entry embeds photos Max delivered via the photo inbox (an issue titled "photos"); they become entries/img/{id}-N.jpg in filename order, so reference exactly those paths in the html.',
+    description: 'Stage one Pearl entry on the draft branch and get back a preview link. Replaces any pending draft. NEVER publishes — the entry goes live only via publish_pearl after Max explicitly approves the preview. Images are wired automatically: just reference entries/img/{id}-1.jpg (…-2.jpg, in display order) in the html, and any file not already in the repo is filled from the photos Max pasted at the drop page (pearl_status → drop_page) and cleared from the inbox. If not enough photos are waiting, staging fails with a clear message and nothing is published — so a preview can never show a broken image. use_inbox_photos is legacy and ignored.',
     inputSchema: {
       type: 'object',
       required: ['id', 'title', 'date', 'section', 'keywords', 'html'],
