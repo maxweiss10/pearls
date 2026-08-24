@@ -212,7 +212,7 @@ async function handleRpc(env, msg) {
     switch (method) {
       case 'initialize':
         return reply({
-          protocolVersion: (params && params.protocolVersion) || '2025-06-18',
+          protocolVersion: '2025-06-18',
           capabilities: { tools: {} },
           serverInfo: { name: 'pearl-publisher', version: '1.0.0' },
         });
@@ -254,6 +254,19 @@ export default {
       return replies.length ? Response.json(replies) : new Response(null, { status: 202 });
     }
     const res = await handleRpc(env, msg);
-    return res ? Response.json(res) : new Response(null, { status: 202 });
+    if (!res) return new Response(null, { status: 202 });
+    return respond(res, request);
   },
 };
+
+/* Reply the way the official MCP SDK servers do: SSE-framed when the client
+   accepts text/event-stream, plain JSON otherwise; session id on initialize. */
+function respond(res, request) {
+  const wantsSse = (request.headers.get('accept') || '').includes('text/event-stream');
+  const headers = { 'mcp-session-id': crypto.randomUUID() };
+  if (!wantsSse) return Response.json(res, { headers });
+  return new Response(`event: message\ndata: ${JSON.stringify(res)}\n\n`, {
+    status: 200,
+    headers: { ...headers, 'content-type': 'text/event-stream', 'cache-control': 'no-store' },
+  });
+}

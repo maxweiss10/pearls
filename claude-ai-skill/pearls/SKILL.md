@@ -9,15 +9,20 @@ description: Add or edit entries in Max's Pearl clinical study-notes site (maxwe
 
 Every entry is REAL TEXT — selectable, searchable, highlightable. Never a screenshot of text, never a rendered PNG of a recreated diagram. The one override: when Max explicitly asks for the image itself (§3a).
 
-## How publishing works from chat
+## How publishing works from chat — two lanes
 
-Chat can't push to git — but the repo publishes from GitHub issues. This skill builds the complete entry, then hands Max **one link**: a prefilled issue. He taps it, taps **Submit**, and the repo's `pearl-publish` Action stages the entry on a draft branch and comments back a **preview link** (`…/pearls/#draft={id}`) within ~a minute — the entry rendered in the real site, not live yet. He replies **push** on the issue to publish (or **discard** to drop it). Nothing goes live without the push.
+**Lane 1 — Pearl Publisher connector (preferred, zero-leave).** If the tools `pearl_status` / `stage_pearl` / `publish_pearl` / `discard_pearl` are available in this chat, everything happens right here:
 
-The deliverable of every request is that link (§5). Don't offer paste-into-GitHub steps unless the link path fails (§6).
+1. `pearl_status` first — current sections, existing ids (avoid collisions), pending draft, inbox photos. (Skip the §0 web fetches; status is fresher.)
+2. Build the entry, then `stage_pearl` — it stages the draft branch and returns the **preview link**. Give Max that link.
+3. On his EXPLICIT approval of the preview (push/yes/ship) → `publish_pearl`. Never call it unprompted — staging is yours, publishing is his. `discard_pearl` if he drops it.
+4. Photos (raw/figure entries): Max attaches them to https://github.com/maxweiss10/pearls/issues/new?title=photos (the one unavoidable hop — chat can't transmit image bytes); when `pearl_status` shows them in `inbox_photos`, call `stage_pearl` with `use_inbox_photos: true` and reference `entries/img/{id}-N.jpg` (filename order) in the fragment.
 
-**One draft at a time.** The repo holds a single pending draft; a new pearl issue replaces whatever draft is pending. So never hand Max two publish links at once — for a source that splits into several entries, do them sequentially: link for entry 1 → he pushes → link for entry 2. Say that plainly when it applies.
+**Lane 2 — publish-by-issue (fallback when the connector is unavailable).** Build the entry, hand Max one prefilled issue link (§4-5). He taps Submit; the `pearl-publish` Action stages the draft and comments the preview link; he replies **push** on the issue (or **discard**). Nothing goes live without the push.
 
-## 0 · Read the site first — no connector needed
+**One draft at a time** in both lanes. A new stage/issue replaces the pending draft — for a split source, publish entry 1 before staging entry 2, and say so plainly.
+
+## 0 · Read the site first — Lane 2 only (Lane 1 uses pearl_status instead)
 
 Before building anything, web-fetch these raw URLs (public, always current):
 
@@ -82,7 +87,7 @@ The default is real text; an image of text is dead weight, unsearchable and unhi
 
 Rules for both:
 
-- **Photos travel on the pearl issue itself.** Tell Max: after the link opens, attach the photo(s) with 📎 in the issue composer, **in display order**, then Submit. The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
+- **Photos travel out-of-band.** Lane 1: photo-inbox issue + `use_inbox_photos` (see the lanes section). Lane 2: tell Max to attach the photo(s) with 📎 in the pearl issue composer, **in display order**, then Submit. The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
 - **Alt text does the searching.** The pixels contribute nothing to the site index — the alt text carries every drug, dose, arrow, and label in a sentence or two. Never "photo of whiteboard". Push the same terms into the keywords.
 - **Flag once, then proceed.** If the image is mostly typed text, say in one line that the alt text will be doing the searching — then build it exactly as asked. Don't re-litigate.
 - Photo entries still get a real title, section, and keywords. The raw path skips the redesign, not the metadata.
