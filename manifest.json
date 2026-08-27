@@ -8,9 +8,17 @@
     "Infectious Diseases",
     "Endocrine & Obesity",
     "MSK & Sports",
-    "Inpatient Essentials"
+    "Inpatient Essentials",
+    "GI & Hepatology"
   ],
   "entries": [
+    {
+      "id": "2026-08-27-ibd-flare-pain",
+      "title": "IBD Flare Pain Protocol (PO)",
+      "date": "2026-08-27",
+      "section": "GI & Hepatology",
+      "keywords": "ibd, inflammatory bowel disease, crohn disease, ulcerative colitis, flare, pain protocol, acetaminophen, gabapentin, celecoxib, lorazepam, ondansetron, tramadol, morphine, dot phrase, slide"
+    },
     {
       "id": "2026-08-23-bundle-branch-block",
       "title": "Bundle Branch Block: RBBB vs LBBB",
