@@ -1,20 +1,29 @@
 <div class="pearl e-pk1">
 <style>
-.e-pk1 .flow{display:flex;flex-direction:column;align-items:center;margin:.6rem 0 .8rem}
-.e-pk1 .fbox{border:1px solid var(--line);padding:.35rem .9rem;text-align:center;min-width:13rem}
-.e-pk1 .farr{padding:.25rem 0;text-align:center;line-height:1.2}
+.e-pk1 .tree{display:flex;align-items:center;gap:.55rem;margin:.5rem 0 .3rem}
+.e-pk1 .root{border:1px solid var(--line);padding:.3rem .6rem;white-space:nowrap}
+.e-pk1 .fork{display:flex;flex-direction:column;gap:.5rem;flex:1;border-left:1px solid var(--line);padding-left:.55rem}
+.e-pk1 .chain{display:flex;flex-wrap:wrap;align-items:center;gap:.3rem}
+.e-pk1 .fbox{border:1px solid var(--line);padding:.22rem .55rem;white-space:nowrap}
+.e-pk1 .farr{padding:0 .05rem}
 </style>
   <div class="eyebrow">Forelli et al. · Science · 8/2026</div>
-  <div class="flow">
-    <div class="fbox"><b>SGLT2i</b></div>
-    <div class="farr">↓ <span class="mut">binds directly</span></div>
-    <div class="fbox"><b>PANK1 ↑</b><br><span class="mech">rate-limiting, CoA synthesis</span></div>
-    <div class="farr">↓</div>
-    <div class="fbox"><b>CoA ↑</b></div>
-    <div class="farr">↓</div>
-    <div class="fbox"><b>Fuel use ↑</b></div>
-    <div class="farr">↓</div>
-    <div class="fbox"><b>Contractility ↑</b></div>
+  <div class="tree">
+    <div class="root"><b>SGLT2i</b></div>
+    <div class="fork">
+      <div class="chain">
+        <span class="farr">→</span><span class="caps">Kidney</span>
+        <div class="fbox">SGLT2 block</div><span class="farr">→</span>
+        <div class="fbox">Glucosuria</div><span class="farr">→</span>
+        <div class="fbox"><b>↓ Glucose</b></div>
+      </div>
+      <div class="chain">
+        <span class="farr">→</span><span class="caps">Heart</span>
+        <div class="fbox"><b>PANK1 ↑</b></div><span class="farr">→</span>
+        <div class="fbox">CoA ↑</div><span class="farr">→</span>
+        <div class="fbox">Contractility ↑</div><span class="farr">→</span>
+        <div class="fbox"><b>HF improvement</b></div>
+      </div>
+    </div>
   </div>
-  <div class="strip"><span class="mut">SGLT2 absent from heart — off-target, diabetes-independent.</span></div>
 </div>
