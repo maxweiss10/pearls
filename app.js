@@ -743,6 +743,7 @@
         wbLow = ix.text.map(wbNormalize);
         wbTopicLow = ix.outline.map(function (o) { return wbNormalize(o.t + ' ' + (o.in || '')); });
         wbTopics = ix.outline.filter(function (o) { return !o.in; });
+        wbTopics.forEach(function (t) { t.nt = wbNormalize(t.t); });
         wbLoadState = 2;
         wbSearch();
       })
@@ -765,15 +766,52 @@
     for (let i = 0; i < alts.length; i++) if (wbHitTerm(alts[i], hay)) return alts[i];
     return null;
   }
-  function wbCountAlt(a, hay) {
-    if (a.length > 3) { let c = 0, p = 0; while (c < 6 && (p = hay.indexOf(a, p)) !== -1) { c++; p += a.length; } return c; }
-    return wbHitTerm(a, hay) ? 1 : 0;
+  function wbAltRegex(a, flags) {
+    const safe = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(^|[^a-z0-9])' + safe + (a.length <= 3 ? '(?=[^a-z0-9]|$)' : ''), flags || '');
+  }
+  function wbCountAlt(a, hay, cap) { /* real occurrence counts — "HTN" twenty times must beat "HTN" once */
+    cap = cap || 10;
+    let c = 0;
+    if (a.length > 4) { let p = 0; while (c < cap && (p = hay.indexOf(a, p)) !== -1) { c++; p += a.length; } return c; }
+    const re = wbAltRegex(a, 'g');
+    while (c < cap && re.exec(hay)) c++;
+    return c;
+  }
+  function wbFirstPos(alts, hay) { /* earliest occurrence of any alternate, -1 if none */
+    let best = -1;
+    for (let i = 0; i < alts.length; i++) {
+      const a = alts[i];
+      let p;
+      if (a.length > 4) p = hay.indexOf(a);
+      else { const m = wbAltRegex(a).exec(hay); p = m ? m.index + m[1].length : -1; }
+      if (p !== -1 && (best === -1 || p < best)) best = p;
+    }
+    return best;
+  }
+  /* qualified forms are different diseases — "portal hypertension" is not blood pressure */
+  const WB_QUALIFIED = {
+    hypertens: ['portal hypertens', 'pulmonary hypertens', 'portopulmonary hypertens', 'intracranial hypertens', 'intra abdominal hypertens'],
+    htn: ['portal htn', 'pulmonary htn', 'portopulmonary htn', 'intracranial htn']
+  };
+  function wbCountAltNet(a, hay, cap) {
+    let c = wbCountAlt(a, hay, cap);
+    const quals = WB_QUALIFIED[a];
+    if (c && quals) {
+      for (let i = 0; i < quals.length; i++) c -= wbCountAlt(quals[i], hay, cap);
+      if (c < 0) c = 0;
+    }
+    return c;
+  }
+  function wbMatchConceptNet(alts, hay) { /* → matched alternate with net count > 0, or null */
+    for (let i = 0; i < alts.length; i++) if (wbCountAltNet(alts[i], hay, 1)) return alts[i];
+    return null;
   }
   function wbConceptScore(alts, hay) { /* the user's own words (alts[0]) outrank alias expansions */
-    const exact = wbCountAlt(alts[0], hay);
+    const exact = wbCountAltNet(alts[0], hay, 10);
     let alias = 0;
-    for (let i = 1; i < alts.length && alias < 6; i++) alias += wbCountAlt(alts[i], hay);
-    return exact * 30 + Math.min(alias, 6) * 10;
+    for (let i = 1; i < alts.length; i++) alias += wbCountAltNet(alts[i], hay, 10);
+    return exact * 30 + alias * 8;
   }
 
   function wbConcepts(q) {
@@ -873,8 +911,8 @@
       const pageHay = wbLow[o.p - 1] || '';
       let score = 0, inTitle = 0;
       for (let c = 0; c < concepts.length; c++) {
-        if (wbMatchConcept(concepts[c], hay)) { score += 150; inTitle++; }
-        else if (wbMatchConcept(concepts[c], pageHay)) score += 40;
+        if (wbMatchConceptNet(concepts[c], hay)) { score += 150; inTitle++; }
+        else if (wbMatchConceptNet(concepts[c], pageHay)) score += 40;
         else { score = 0; break; }
       }
       if (score && inTitle) {
@@ -896,7 +934,7 @@
         const n = wbConceptScore(concepts[c], hay);
         if (!n) { score = 0; break; }
         score += n;
-        if (!primary) primary = wbMatchConcept(concepts[c], hay);
+        if (!primary) primary = wbMatchConceptNet(concepts[c], hay);
       }
       if (score) {
         /* words sitting together beat words scattered across the page */
@@ -905,6 +943,20 @@
           while (k < 3 && (at = hay.indexOf(ph.s, at)) !== -1) { k++; at += ph.s.length; }
           if (k) { score += ph.w * k; if (ph.s === surface.join(' ')) primary = ph.s; }
         });
+        /* aboutness: a page inside a matching section, or opening on the term, is ABOUT it */
+        const enc = wbTopicFor(p + 1);
+        if (enc && enc.nt) {
+          for (let c = 0; c < concepts.length; c++) {
+            if (wbMatchConceptNet(concepts[c], enc.nt)) { score += 100; break; }
+          }
+        }
+        let minP = Infinity, maxP = -1;
+        for (let c = 0; c < concepts.length; c++) {
+          const fp = wbFirstPos(concepts[c], hay);
+          if (fp !== -1) { if (fp < minP) minP = fp; if (fp > maxP) maxP = fp; }
+        }
+        if (minP < 300) score += 60;                                 /* header zone */
+        if (concepts.length > 1 && maxP - minP < 150) score += 80;   /* concepts near each other */
       }
       /* skip title/preface/contents pages (before the first section) and pages already shown as sections */
       if (score && !topicPages[p + 1] && wbTopics.length && p + 1 >= wbTopics[0].p) {
@@ -921,9 +973,9 @@
       let s = 0;
       for (let c = 0; c < concepts.length; c++) {
         const alts = concepts[c];
-        if (wbMatchConcept(alts, e.wbT)) s += 300;
-        else if (wbMatchConcept(alts, e.wbK)) s += 150;
-        else if (wbMatchConcept(alts, e.wbB)) s += 80;
+        if (wbMatchConceptNet(alts, e.wbT)) s += 300;
+        else if (wbMatchConceptNet(alts, e.wbK)) s += 150;
+        else if (wbMatchConceptNet(alts, e.wbB)) s += 80;
         else { s = 0; break; }
       }
       if (s) {
