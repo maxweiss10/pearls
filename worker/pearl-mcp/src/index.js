@@ -1,6 +1,7 @@
 /* pearl-mcp — remote MCP server that lets claude.ai chat publish Pearl entries.
  *
  * Tools: pearl_status · stage_pearl · publish_pearl · discard_pearl
+ *        get_pearl · edit_pearl · delete_pearl · edit_resources
  * Transport: MCP streamable HTTP (stateless JSON responses) at /{PATH_KEY}/mcp
  * Auth: the unguessable PATH_KEY path segment (lives only in the claude.ai
  *       connector config) + a fine-grained GitHub PAT (contents RW on
@@ -66,10 +67,11 @@ async function toolStatus(env, a) {
       await new Promise((r) => setTimeout(r, 2500));
     }
   }
-  const [draft, manifest, inbox] = await Promise.all([
+  const [draft, manifest, inbox, resourcesFile] = await Promise.all([
     getDraft(env),
     gh(env, 'GET', '/contents/manifest.json?ref=main'),
     gh(env, 'GET', '/contents/entries%2Fimg%2Finbox?ref=main'),
+    gh(env, 'GET', '/contents/resources.json?ref=main'),
   ]);
   const man = JSON.parse(b64decodeUtf8(manifest.content));
   const photos = Array.isArray(inbox) ? inbox.map((f) => f.name) : [];
@@ -77,6 +79,7 @@ async function toolStatus(env, a) {
     pending_draft: draft ? { title: draft.message, preview: idFromMessage(draft.message) ? `${SITE}#draft=${idFromMessage(draft.message)}` : null } : null,
     sections: man.sections,
     entry_ids: man.entries.map((e) => e.id),
+    resources: resourcesFile._status === 404 ? [] : JSON.parse(b64decodeUtf8(resourcesFile.content)),
     inbox_photos: photos,
     drop_page: env.DROP_KEY ? `${WORKER}/${env.DROP_KEY}/drop` : null,
     drop_page_note: 'Give Max this link ONLY when an entry needs the actual image. He pastes (or snaps) there; the photo lands in inbox_photos within seconds.',
@@ -300,12 +303,62 @@ async function toolDelete(env, a) {
   };
 }
 
+/* ---------- resources tab ---------- */
+
+async function toolResources(env, a) {
+  const action = String(a.action || 'add');
+  const file = await gh(env, 'GET', '/contents/resources.json?ref=main');
+  if (file._status === 404) throw new Error('resources.json is missing on main');
+  const list = JSON.parse(b64decodeUtf8(file.content));
+  const norm = (s) => String(s || '').trim().toLowerCase();
+
+  let title;
+  let message;
+  if (action === 'add') {
+    title = String(a.title || '').trim();
+    const url = String(a.url || '').trim();
+    if (!title || !/^https?:\/\//.test(url)) throw new Error('add needs a title and an http(s) url');
+    const dup = list.find((r) => norm(r.title) === norm(title) || r.url === url);
+    if (dup) throw new Error(`"${dup.title}" already has that title or url — use action "edit" to change it`);
+    list.push({ title, url, desc: String(a.desc || '').trim() });
+    message = `Pearl: resource — ${title}`;
+  } else if (action === 'edit' || action === 'remove') {
+    const i = list.findIndex((r) => norm(r.title) === norm(a.match_title));
+    if (i < 0) throw new Error(`no resource titled "${a.match_title}" — current: ${list.map((r) => r.title).join(' · ')}`);
+    if (action === 'remove') {
+      title = list[i].title;
+      list.splice(i, 1);
+      message = `Pearl: remove resource — ${title}`;
+    } else {
+      if (a.url !== undefined && !/^https?:\/\//.test(String(a.url).trim())) throw new Error('url must be http(s)');
+      if (a.title !== undefined) list[i].title = String(a.title).trim();
+      if (a.url !== undefined) list[i].url = String(a.url).trim();
+      if (a.desc !== undefined) list[i].desc = String(a.desc).trim();
+      title = list[i].title;
+      message = `Pearl: edit resource — ${title}`;
+    }
+  } else {
+    throw new Error(`unknown action: ${action} — use add, edit, or remove`);
+  }
+
+  const head = await headOf(env, 'main');
+  await commitTree(env, 'main', [
+    { path: 'resources.json', mode: '100644', type: 'blob', content: JSON.stringify(list, null, 2) + '\n' },
+  ], message, head);
+
+  return {
+    [action === 'add' ? 'added' : action === 'edit' ? 'edited' : 'removed']: title,
+    resources: list,
+    note: 'Live on the Resources tab after the ~1 min Pages rebuild; git revert restores any row.',
+  };
+}
+
 /* ---------- MCP plumbing (streamable HTTP, stateless) ---------- */
 
 const TOOLS = [
   {
     name: 'pearl_status',
-    description: 'Current state of the Pearl site repo: pending draft (if any), the section list, existing entry ids, any photos waiting in the inbox, and drop_page (the paste link for photos). Call before staging. Set wait_for_photo:true right after giving Max the drop_page link — the call then blocks until his paste arrives (up to ~22 s), so you can hand over the link and pick the photo up in the SAME turn instead of asking him to report back. If it returns timed_out_waiting, just call again.',
+    description: 'Current state of the Pearl site repo: pending draft (if any), the section list, existing entry ids, the Resources-tab rows, any photos waiting in the inbox, and drop_page (the paste link for photos). Call before staging. Set wait_for_photo:true right after giving Max the drop_page link — the call then blocks until his paste arrives (up to ~22 s), so you can hand over the link and pick the photo up in the SAME turn instead of asking him to report back. If it returns timed_out_waiting, just call again.',
     inputSchema: { type: 'object', properties: { wait_for_photo: { type: 'boolean' } } },
   },
   {
@@ -370,6 +423,21 @@ const TOOLS = [
     description: 'Delete the pending draft without publishing.',
     inputSchema: { type: 'object', properties: {} },
   },
+  {
+    name: 'edit_resources',
+    description: 'Add, edit, or remove a link row on the site\'s Resources tab (resources.json — {title, url, desc} rows). A resource is a LINK, not a study note: "add X to my resources" means this tool, never stage_pearl. Goes straight to main with no draft or preview (a link row is instantly git-revertable), so for add/edit just restate the row in one line afterward. For remove, name the row to Max and get his explicit yes BEFORE calling. pearl_status lists the current rows.',
+    inputSchema: {
+      type: 'object',
+      required: ['action'],
+      properties: {
+        action: { type: 'string', enum: ['add', 'edit', 'remove'] },
+        title: { type: 'string', description: 'add: display name; edit: pass to retitle' },
+        url: { type: 'string', description: 'http(s) link (required for add)' },
+        desc: { type: 'string', description: 'one short line shown under the title; note a login gate if any ("MyAccess login")' },
+        match_title: { type: 'string', description: 'edit/remove: title of the existing row (case-insensitive)' },
+      },
+    },
+  },
 ];
 
 async function callTool(env, name, args) {
@@ -382,6 +450,7 @@ async function callTool(env, name, args) {
     case 'delete_pearl': return toolDelete(env, args || {});
     case 'publish_pearl': return toolPublish(env);
     case 'discard_pearl': return toolDiscard(env);
+    case 'edit_resources': return toolResources(env, args || {});
     default: throw new Error(`unknown tool: ${name}`);
   }
 }

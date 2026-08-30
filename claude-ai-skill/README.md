@@ -6,7 +6,7 @@
 
 **Re-install after a change:** Settings → **Skills** → `pearls` → **⋮ → Replace** → upload the rebuilt zip → **Upload and replace**. Re-zipping the folder here does nothing on its own — the account keeps serving whatever was last uploaded, which is how the installed copy went stale pointing at `pearl-study-notes`.
 
-**What it does:** produces the finished `entries/{id}.html` fragment plus its `manifest.json` row — and, when Max asks for the image itself (raw stack or one figure inside a text entry), the images renamed to `entries/img/{id}-N.jpg` ready to drag into GitHub — with copy-paste instructions for committing via GitHub's web UI. It cannot commit for you — the claude.ai GitHub connector is read-only. It is told to say so in its first reply, before doing the work. Add `maxweiss10/pearls` as a connector source so it can read current sections and match house style.
+**What it does:** with the **Pearl Publisher** connector (the `worker/pearl-mcp` worker) available, chat stages, previews, publishes, edits, and deletes entries directly, and manages the Resources tab via `edit_resources` — the skill's Lane 1. Without the connector it falls back to Lane 2: prefilled publish-by-issue links for entries and hand-paste instructions for resources (the claude.ai GitHub connector itself is read-only). Add `maxweiss10/pearls` as a connector source so it can read current sections and match house style.
 
 **Images from plain chat:** chat can't touch photo bytes either — the photo inbox works from anywhere: open https://github.com/maxweiss10/pearls/issues/new?title=photos, attach, submit; the `pearl-inbox` Action commits them to `entries/img/inbox/` for the next Code session to use.
 

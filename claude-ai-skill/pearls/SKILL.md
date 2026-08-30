@@ -1,6 +1,6 @@
 ---
 name: pearls
-description: Add or edit entries in Max's Pearl clinical study-notes site (maxweiss10.github.io/pearls) straight from chat. Turns chalktalk photos, slides, papers, videos, or text into reference entries — redesigned as real text by default, or using the photos themselves when asked ("as-is", "keep the diagram") — and publishes them via one tap-to-publish link with a preview-before-live step. Use for "add a pearl", "add to my study notes", or any request to capture, edit, or fix a study-note entry.
+description: Add or edit entries in Max's Pearl clinical study-notes site (maxweiss10.github.io/pearls) straight from chat. Turns chalktalk photos, slides, papers, videos, or text into reference entries — redesigned as real text by default, or using the photos themselves when asked ("as-is", "keep the diagram") — and publishes them via one tap-to-publish link with a preview-before-live step. Use for "add a pearl", "add to my study notes", or any request to capture, edit, or fix a study-note entry — and for the site's Resources tab ("add X to my resources" is a link row via edit_resources, never a pearl entry).
 ---
 
 # Pearl — study notes (claude.ai chat edition)
@@ -59,12 +59,21 @@ If web fetch is unavailable, proceed with the fallback section list in §2 and s
 | Paper or article URL (± his takeaway) | **Paper** entry — his takeaway VERBATIM as body if given; else 3 short lines (Main finding / Design / Takeaway) + `source` |
 | YouTube link | **Video** entry — distill hard to ONE screenful + `source` |
 | A quick fact or mnemonic | Small **text pearl** |
+| "add [site/tool/link] to my resources" | **Resource** — a link row on the Resources tab, never an entry (§1a) |
 | "fix / retitle / regenerate / move [entry]" | **Edit** — Lane 1: `get_pearl` → `edit_pearl` (id stays stable) → preview → publish. Lane 2: fetch the fragment (§0), apply the change, re-issue with the SAME id (§4) |
 | "delete / remove [entry]" | **Confirm first.** Name what will be removed (title · section · date), note it stays recoverable in git history, get an explicit yes — then Lane 1: `delete_pearl` with `expect_title`. Lane 2 only: the manual steps in §6. Never act on an ambiguous reference. |
 
 **Split rule:** a dense multi-panel source (compiled reference sheet, whole lecture) is never one entry — split into 2-4 by topic, hard ceiling ~8 KB of HTML each, published sequentially (one draft at a time, above).
 
 **Never invent clinical content.** Compress and abbreviate like a resident, but every fact must come from the source or from Max.
+
+## 1a · Resources tab — link rows, not entries
+
+The site's Resources tab is a flat list of links (`resources.json`: `{title, url, desc}`). "Add X to my resources" NEVER becomes a pearl entry — no id, no section, no fragment, no draft.
+
+- **Lane 1**: `edit_resources` (action `add` / `edit` / `remove`). It commits straight to main — no preview, because a link row is instantly git-revertable — so for adds and edits just restate the row in one line afterward: *"Added **UCSF Box** to Resources (MyAccess login) — live in ~1 min."* `remove` still needs his explicit yes first, naming the row. Current rows come back from `pearl_status`.
+- **Lane 2** (connector unavailable): build the exact JSON row, then hand him `https://github.com/maxweiss10/pearls/edit/main/resources.json` with one line of paste instructions (comma after the previous `}`, new row before the closing `]`).
+- The `desc` is one short line; note a login gate when there is one ("MyAccess login"). If the target is gated and Max gave no description, a plain honest desc beats a guessed one.
 
 ## 2 · Metadata
 
