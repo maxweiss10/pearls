@@ -694,7 +694,26 @@
     'discharge': ['discharge', 'disposition'],
     'consult': ['consult'],
     'ekg': ['ekg', 'ecg', 'electrocardiogram'],
-    'heparin drip': ['heparin'], 'insulin drip': ['insulin infusion', 'dka']
+    'heparin drip': ['heparin'], 'insulin drip': ['insulin infusion', 'dka'],
+    /* eponyms & scores (keys are normalized: no apostrophes, dashes → spaces) */
+    'lights criteria': ['exudate', 'transudate', 'pleural'],
+    'light criteria': ['lights criteria', 'exudate', 'transudate', 'pleural'],
+    'wells': ['pulmonary embolism', 'deep vein'],
+    'curb 65': ['pneumonia'], 'psi': ['pneumonia severity'],
+    'meld': ['cirrhosis', 'liver'], 'child pugh': ['cirrhosis'],
+    'ranson': ['pancreatitis'], 'centor': ['pharyngitis'],
+    'chads': ['atrial fibrillation', 'stroke'], 'cha2ds2': ['atrial fibrillation', 'stroke'],
+    'has bled': ['bleed', 'anticoagula'],
+    'fena': ['fractional excretion', 'prerenal'], 'feurea': ['fractional excretion', 'urea'],
+    'qsofa': ['sepsis'], 'sofa': ['sepsis'],
+    'timi': ['acute coronary'], 'grace': ['acute coronary'],
+    'nihss': ['stroke'], 'ciwa': ['alcohol withdrawal'], 'cows': ['opioid withdrawal'],
+    'blatchford': ['gastrointestinal bleed'], 'rockall': ['gastrointestinal bleed'],
+    'maddrey': ['alcoholic hepatitis'], 'lille': ['alcoholic hepatitis'],
+    '4ts': ['heparin induced thrombocytopenia'], 'plasmic': ['ttp', 'thrombotic'],
+    'berlin': ['acute respiratory distress'], 'kdigo': ['acute kidney injury'],
+    'duke': ['endocarditis'], 'jones criteria': ['rheumatic fever'],
+    'winters': ['metabolic acidosis', 'compensation'], 'padua': ['venous thromboembolism']
   };
   /* fold the palette's abbreviation map in as alternates too */
   Object.keys(SYNONYMS).forEach(function (k) {
@@ -706,6 +725,13 @@
 
   let wbIndex = null, wbLow = null, wbTopicLow = null, wbTopics = null, wbLoadState = 0; /* 0 idle 1 loading 2 ready 3 failed */
 
+  /* one normalization for query AND haystacks: curly/straight apostrophes stripped
+     ("Light’s" → "lights"), dashes and slashes to spaces ("CURB-65" → "curb 65") */
+  function wbNormalize(s) {
+    return s.toLowerCase().replace(/['’]/g, '').replace(/[\/\-–—]+/g, ' ')
+      .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
   function wbEnsureIndex() {
     if (wbLoadState === 1 || wbLoadState === 2) return;
     wbLoadState = 1;
@@ -714,8 +740,8 @@
       .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
       .then(function (ix) {
         wbIndex = ix;
-        wbLow = ix.text.map(function (t) { return t.toLowerCase(); });
-        wbTopicLow = ix.outline.map(function (o) { return (o.t + ' ' + (o.in || '')).toLowerCase(); });
+        wbLow = ix.text.map(wbNormalize);
+        wbTopicLow = ix.outline.map(function (o) { return wbNormalize(o.t + ' ' + (o.in || '')); });
         wbTopics = ix.outline.filter(function (o) { return !o.in; });
         wbLoadState = 2;
         wbSearch();
@@ -731,8 +757,9 @@
 
   function wbHitTerm(alt, hay) {
     if (alt.length > 4) return hay.indexOf(alt) !== -1;      /* long terms are stems: substring */
-    const safe = alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  /* short terms: word-start ("rate" ≠ "incarcerated", "ards" → "ardsnet") */
-    return new RegExp('(^|[^a-z0-9])' + safe).test(hay);
+    const safe = alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (alt.length === 4) return new RegExp('(^|[^a-z0-9])' + safe).test(hay); /* word-start: "rate" ≠ "incarcerated", "ards" → "ardsnet" */
+    return new RegExp('(^|[^a-z0-9])' + safe + '([^a-z0-9]|$)').test(hay);     /* whole word: "af" ≠ "after" */
   }
   function wbMatchConcept(alts, hay) { /* → matched alternate or null */
     for (let i = 0; i < alts.length; i++) if (wbHitTerm(alts[i], hay)) return alts[i];
@@ -750,9 +777,10 @@
   }
 
   function wbConcepts(q) {
-    /* stopwords drop first, so "tap a belly" pairs up as "tap belly" */
-    const toks = q.toLowerCase().replace(/[^a-z0-9\s/-]/g, ' ').split(/\s+/)
-      .filter(function (t) { return t && !WB_STOP.has(t); });
+    /* stopwords + 1-char noise drop first, so "tap a belly" pairs as "tap belly"
+       and "light's" never sheds a stray "s" concept */
+    const toks = wbNormalize(q).split(' ')
+      .filter(function (t) { return t.length > 1 && !WB_STOP.has(t); });
     const out = [];
     for (let i = 0; i < toks.length; i++) {
       const two = i + 1 < toks.length ? toks[i] + ' ' + toks[i + 1] : null;
@@ -787,6 +815,9 @@
   }
 
   function wbLink(page, term) {
+    /* single word, possessive-s trimmed, so pdf.js find still hits "Light's" for "lights" */
+    if (term) term = term.split(' ')[0];
+    if (term && term.length > 4) term = term.replace(/s$/, '');
     return WB_VIEWER + '#page=' + page + (term ? '&search=' + encodeURIComponent(term) : '');
   }
 
@@ -803,10 +834,37 @@
     $wbhint.hidden = true;
     if (wbLoadState !== 2) { wbEnsureIndex(); return; }
 
-    const concepts = wbConcepts(q);
+    let concepts = wbConcepts(q);
     if (!concepts.length) { wbStatus('Add a medical term — e.g. “blood pressure”, “hyponatremia”, “paracentesis”.'); return; }
+
+    /* a concept that matches nowhere in the book would zero every page (a typo, a
+       stray word) — drop it instead of returning nothing, as long as one survives */
+    if (concepts.length > 1) {
+      const alive = concepts.filter(function (alts) {
+        for (let p = 0; p < wbLow.length; p++) if (wbMatchConcept(alts, wbLow[p])) return true;
+        return false;
+      });
+      if (alive.length) concepts = alive;
+    }
+
+    /* phrases to reward when words sit together: the whole query, then each adjacent pair */
+    const surface = concepts.map(function (a) { return a[0]; });
+    const phrases = [];
+    if (surface.length > 1) {
+      phrases.push({ s: surface.join(' '), w: 220 });
+      for (let i = 0; i + 1 < surface.length; i++) phrases.push({ s: surface[i] + ' ' + surface[i + 1], w: 90 });
+    }
+
     const flat = [];
     concepts.forEach(function (a) { a.forEach(function (t) { if (t.length > 3 && flat.indexOf(t) === -1) flat.push(t); }); });
+    /* display-highlight variants so “Light’s” still gets marked for query “lights” */
+    const marks = flat.slice();
+    flat.forEach(function (t) {
+      if (/s( |$)/.test(t + ' ')) {
+        marks.push(t.replace(/s(?= )|s$/, "'s"));
+        marks.push(t.replace(/s(?= )|s$/, '’s'));
+      }
+    });
 
     /* topics: ≥1 concept in the section title; the rest may match the section's first page */
     const topicHits = [];
@@ -819,7 +877,10 @@
         else if (wbMatchConcept(concepts[c], pageHay)) score += 40;
         else { score = 0; break; }
       }
-      if (score && inTitle) topicHits.push({ o: o, score: score + (o.in ? 0 : 40) });
+      if (score && inTitle) {
+        phrases.forEach(function (ph) { if (hay.indexOf(ph.s) !== -1) score += ph.w; });
+        topicHits.push({ o: o, score: score + (o.in ? 0 : 40) });
+      }
     });
     topicHits.sort(function (a, b) { return b.score - a.score || a.o.p - b.o.p; });
     const topTopics = topicHits.slice(0, 6);
@@ -837,6 +898,14 @@
         score += n;
         if (!primary) primary = wbMatchConcept(concepts[c], hay);
       }
+      if (score) {
+        /* words sitting together beat words scattered across the page */
+        phrases.forEach(function (ph) {
+          let k = 0, at = 0;
+          while (k < 3 && (at = hay.indexOf(ph.s, at)) !== -1) { k++; at += ph.s.length; }
+          if (k) { score += ph.w * k; if (ph.s === surface.join(' ')) primary = ph.s; }
+        });
+      }
       /* skip title/preface/contents pages (before the first section) and pages already shown as sections */
       if (score && !topicPages[p + 1] && wbTopics.length && p + 1 >= wbTopics[0].p) {
         pageHits.push({ p: p + 1, score: score, primary: primary });
@@ -845,18 +914,22 @@
     pageHits.sort(function (a, b) { return b.score - a.score || a.p - b.p; });
     const topPages = pageHits.slice(0, 8);
 
-    /* pearls: every concept somewhere in the note */
+    /* pearls: every concept somewhere in the note (haystacks normalized like the book) */
     const pearlHits = [];
     entries.forEach(function (e) {
+      if (!e.wbT) { e.wbT = wbNormalize(e.titleLower); e.wbK = wbNormalize(e.keysLower); e.wbB = wbNormalize(e.bodyLower); }
       let s = 0;
       for (let c = 0; c < concepts.length; c++) {
         const alts = concepts[c];
-        if (wbMatchConcept(alts, e.titleLower)) s += 300;
-        else if (wbMatchConcept(alts, e.keysLower)) s += 150;
-        else if (wbMatchConcept(alts, e.bodyLower)) s += 80;
+        if (wbMatchConcept(alts, e.wbT)) s += 300;
+        else if (wbMatchConcept(alts, e.wbK)) s += 150;
+        else if (wbMatchConcept(alts, e.wbB)) s += 80;
         else { s = 0; break; }
       }
-      if (s) pearlHits.push({ e: e, score: s });
+      if (s) {
+        phrases.forEach(function (ph) { if (e.wbT.indexOf(ph.s) !== -1 || e.wbB.indexOf(ph.s) !== -1) s += ph.w; });
+        pearlHits.push({ e: e, score: s });
+      }
     });
     pearlHits.sort(function (a, b) { return b.score - a.score; });
     const topPearls = pearlHits.slice(0, 5);
@@ -895,7 +968,7 @@
         const snip = document.createElement('span');
         snip.className = 'wbr-snip';
         snip.textContent = wbSnippet(h.p - 1, flat);
-        highlight(snip, flat);
+        highlight(snip, marks);
         a.appendChild(snip);
         $wbresults.appendChild(a);
       });
@@ -912,15 +985,15 @@
           '<span class="wbr-c">' + esc(h.e.meta.section) + '</span>';
         const snip = document.createElement('span');
         snip.className = 'wbr-snip';
-        snip.textContent = snippetFor(h.e, flat);
-        highlight(snip, flat);
+        snip.textContent = snippetFor(h.e, marks);
+        highlight(snip, marks);
         b.appendChild(snip);
         b.addEventListener('click', function () {
           switchTab('notes');
           clearJumpHighlight();
           h.e.card.hidden = false;
           h.e.card.scrollIntoView({ block: 'start', behavior: 'instant' });
-          highlight(h.e.bodyEl, flat);
+          highlight(h.e.bodyEl, marks);
           lastJump = h.e;
           activeId = h.e.meta.id;
         });
@@ -929,28 +1002,66 @@
     }
   }
 
+  /* ---------- home-base tabs (Pearls · Schedule · Search · Resources) ---------- */
+  const SCHED_URL = 'https://maxweiss10.github.io/intern-year-schedule/';
+  const $schedview = document.getElementById('schedview');
+  const $schedframe = document.getElementById('schedframe');
+  const $resview = document.getElementById('resview');
+  const $reslist = document.getElementById('reslist');
+
+  const TABS = {
+    notes: { btn: $tabNotes, views: [$notesview, $notesbar], hash: '' },
+    schedule: { btn: document.getElementById('tab-schedule'), views: [$schedview], hash: '#schedule' },
+    wb: { btn: $tabWb, views: [$wbview], hash: '#wb' },
+    resources: { btn: document.getElementById('tab-resources'), views: [$resview], hash: '#resources' }
+  };
+
+  let resLoaded = false;
+  function loadResources() {
+    if (resLoaded) return;
+    resLoaded = true;
+    fetch('resources.json', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (list) {
+        $reslist.innerHTML = '';
+        list.forEach(function (res) {
+          const a = document.createElement('a');
+          a.className = 'wbr';
+          a.href = res.url;
+          a.target = '_blank'; a.rel = 'noopener';
+          a.innerHTML =
+            '<span class="wbr-t">' + esc(res.title) + ' ↗</span>' +
+            '<span class="wbr-c">' + esc(res.url.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</span>' +
+            (res.desc ? '<span class="wbr-snip">' + esc(res.desc) + '</span>' : '');
+          $reslist.appendChild(a);
+        });
+      })
+      .catch(function () {
+        $reslist.innerHTML = '<p class="wb-status">Couldn’t load resources.json — check your connection and reload.</p>';
+      });
+  }
+
   function switchTab(which) {
-    const wb = which === 'wb';
-    document.body.classList.toggle('wbmode', wb);
-    $tabWb.classList.toggle('on', wb);
-    $tabWb.setAttribute('aria-selected', String(wb));
-    $tabNotes.classList.toggle('on', !wb);
-    $tabNotes.setAttribute('aria-selected', String(!wb));
-    $wbview.hidden = !wb;
-    if ($notesview) $notesview.hidden = wb;
-    if ($notesbar) $notesbar.hidden = wb;
-    if (wb) {
-      if (location.hash !== '#wb') history.replaceState(null, '', '#wb');
-      wbEnsureIndex();
-      $wbq.focus();
-    } else if (location.hash === '#wb') {
-      history.replaceState(null, '', location.pathname + location.search);
-    }
+    if (!TABS[which]) which = 'notes';
+    Object.keys(TABS).forEach(function (name) {
+      const t = TABS[name];
+      const on = name === which;
+      if (t.btn) { t.btn.classList.toggle('on', on); t.btn.setAttribute('aria-selected', String(on)); }
+      t.views.forEach(function (v) { if (v) v.hidden = !on; });
+    });
+    document.body.classList.toggle('wbmode', which === 'wb');
+    const hash = TABS[which].hash;
+    if (hash && location.hash !== hash) history.replaceState(null, '', hash);
+    else if (!hash && /^#(wb|schedule|resources)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+    if (which === 'wb') { wbEnsureIndex(); $wbq.focus(); }
+    else if (which === 'schedule' && $schedframe && !$schedframe.src) $schedframe.src = SCHED_URL;
+    else if (which === 'resources') loadResources();
   }
 
   if ($tabWb && $wbview) {
-    $tabNotes.addEventListener('click', function () { switchTab('notes'); });
-    $tabWb.addEventListener('click', function () { switchTab('wb'); });
+    Object.keys(TABS).forEach(function (name) {
+      if (TABS[name].btn) TABS[name].btn.addEventListener('click', function () { switchTab(name); });
+    });
     let wbDebounce = null;
     $wbq.addEventListener('input', function () {
       clearTimeout(wbDebounce);
@@ -960,7 +1071,8 @@
       if (ev.key === 'Enter') { ev.preventDefault(); wbSearch(); }
       else if (ev.key === 'Escape') { $wbq.value = ''; wbSearch(); }
     });
-    if (location.hash === '#wb') switchTab('wb');
+    const m = location.hash.match(/^#(wb|schedule|resources)$/);
+    if (m) switchTab(m[1]);
   }
 
   /* ---------- draft preview (#draft=id1,id2 — fragments served from the draft branch) ---------- */

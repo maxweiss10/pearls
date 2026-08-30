@@ -36,6 +36,7 @@ Interpret intent from whatever the user says. When they don't specify a format, 
 | A quick fact or mnemonic in a sentence | Small **text pearl** |
 | "fix / retitle / regenerate / move to <section> [entry]" | **Edit** `entries/*.html` and/or `manifest.json` on the draft branch — ids and filenames stay stable; preview shows the edited version |
 | "push / publish / yes / ship it" (a draft is pending) | **Publish** — §7 |
+| "add a resource / add [site] to my resources" | **Resource** — append `{title, url, desc}` to `resources.json` (repo root, an ordered array rendered by the site's Resources tab). No draft branch: restate exactly what will be added in one line, then commit straight to main (`Pearl: resource — {title}`); it is a link row, instantly `git revert`-able. Same flow to edit or remove a resource row (removal still gets a one-line confirm naming the row). |
 | "delete / remove [entry]" | **Delete — confirmation REQUIRED first.** Name exactly what will be removed (title · section · date), note it stays recoverable in git history, get an explicit yes via AskUserQuestion. Only after the yes: delete `entries/{id}.html` and any `entries/img/{id}-*.jpg`, remove the manifest row (and the section from `sections[]` if now empty), then `git checkout main && git pull --rebase origin main`, commit `Pearl: delete {TITLE}`, push. Never delete on an ambiguous reference — resolve which entry first. |
 
 Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but are never required. If the request is genuinely ambiguous, ask ONE short question; otherwise proceed to a preview.
@@ -159,6 +160,10 @@ git push origin --delete draft; git branch -D draft
 ```
 
 The range form publishes every draft commit even if the single-commit rule slipped. If the cherry-pick conflicts on `manifest.json` (main moved since the draft), keep BOTH changes with the newest entry first, `git add manifest.json` and `git cherry-pick --continue`.
+
+## 7.5 · The site is a 4-tab home base (Aug 30, 2026)
+
+`index.html` has tabs: **Pearls** (the notes — everything above), **Schedule** (live iframe of maxweiss10.github.io/intern-year-schedule — never copy that site's files into this repo; the iframe keeps its backend intact), **Search** (plain-language search over the White Book PDF + pearls; index = `whitebook-index.json`, rebuilt by `tools/build_whitebook_index.py` if whitebook.pdf ever changes; alias map `WB_ALIAS` in app.js), **Resources** (rendered from `resources.json`). Site-level changes (tabs, app.js, css) canNOT be previewed via `#draft=` — preview those with a local `python3 -m http.server` walkthrough instead, and still get an explicit go-ahead before pushing to main. Entry work is untouched by all of this.
 
 ## 8 · Report
 

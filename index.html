@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pearl — study notes</title>
+<title>Pearl — residency home base</title>
 <meta name="description" content="Pearl — a fast, searchable clinical reference of residency study notes: pressors, sedation, antibiotics, effusions, exams, and ward essentials.">
-<meta property="og:title" content="Pearl — study notes">
+<meta property="og:title" content="Pearl — residency home base">
 <meta property="og:description" content="A fast, searchable clinical reference of residency study notes.">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
@@ -18,14 +18,14 @@
 <link rel="preload" href="fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="pearl.css">
+<link rel="stylesheet" href="pearl.css?v=hb1">
 </head>
 <body>
 <header class="top wrap">
   <div class="brand">
     <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#1a3a5c"/><circle cx="50" cy="54" r="26" fill="#fff"/><circle cx="42" cy="46" r="9" fill="#dfe6ee"/></svg>
     <h1>Pearl</h1>
-    <span class="sub">study notes</span>
+    <span class="sub">residency home base</span>
   </div>
   <div class="right">
     <span class="count" id="count"></span>
@@ -34,9 +34,11 @@
 </header>
 
 <nav class="tabs" aria-label="Views">
-  <div class="wrap tabrow">
-    <button id="tab-notes" class="tab on" type="button" role="tab" aria-selected="true">Notes</button>
-    <button id="tab-wb" class="tab" type="button" role="tab" aria-selected="false">White Book search</button>
+  <div class="wrap tabrow" role="tablist">
+    <button id="tab-notes" class="tab on" type="button" role="tab" aria-selected="true">Pearls</button>
+    <button id="tab-schedule" class="tab" type="button" role="tab" aria-selected="false">Schedule</button>
+    <button id="tab-wb" class="tab" type="button" role="tab" aria-selected="false">Search</button>
+    <button id="tab-resources" class="tab" type="button" role="tab" aria-selected="false">Resources</button>
   </div>
 </nav>
 
@@ -69,19 +71,22 @@
     <p class="wb-hint" id="wbhint">Searches every page of the MGH White Book <em>and</em> your pearls, and jumps you to the exact page.</p>
   </div>
   <div id="wbresults" class="wb-results" aria-live="polite"></div>
-  <div class="wb-resources">
-    <p class="toc-title">Resources</p>
-    <p><a href="https://notebook.google.com/notebook/9ac9528e-9fa1-4992-8ea4-4723ef10b30b?authuser=0&amp;pageId=none" target="_blank" rel="noopener">Ask NotebookLM ↗</a><span class="mut"> — AI Q&amp;A with the White Book loaded; best for “explain why” questions.</span></p>
-    <p><a href="https://maxweiss10.github.io/whitebook/pdfjs/web/viewer.html?file=../../whitebook.pdf" target="_blank" rel="noopener">Open the White Book ↗</a><span class="mut"> — full PDF viewer, browsable table of contents.</span></p>
-  </div>
+</div>
+
+<div class="schedview" id="schedview" hidden>
+  <p class="viewbar wrap">Embedded live from <a href="https://maxweiss10.github.io/intern-year-schedule/" target="_blank" rel="noopener">intern-year-schedule ↗</a> — same site, nothing moved.</p>
+  <iframe id="schedframe" title="Intern year schedule"></iframe>
+</div>
+
+<div class="wrap resview" id="resview" hidden>
+  <p class="toc-title">Residency resources</p>
+  <div id="reslist"><p class="wb-status">Loading…</p></div>
+  <p class="res-hint">Add more by telling Claude “add a resource” in <span class="code">/pearls</span>.</p>
 </div>
 
 <footer class="wrap foot">
   <span>Add notes with <span class="code">/pearls</span> in Claude Code — press <kbd>?</kbd> for shortcuts.</span>
-  <span class="footlinks">
-    <a href="https://notebook.google.com/notebook/9ac9528e-9fa1-4992-8ea4-4723ef10b30b?authuser=0&amp;pageId=none" target="_blank" rel="noopener">NotebookLM ↗</a>
-    <a href="https://docs.google.com/document/d/1N8egmcK1GHmA6VPiwi2uGR71VcNt8Ve-M-tMkczFMjc/edit" target="_blank" rel="noopener">Legacy doc archive ↗</a>
-  </span>
+  <a href="https://docs.google.com/document/d/1N8egmcK1GHmA6VPiwi2uGR71VcNt8Ve-M-tMkczFMjc/edit" target="_blank" rel="noopener">Legacy doc archive ↗</a>
 </footer>
 
 <dialog id="keys">
@@ -98,6 +103,6 @@
   </div>
 </dialog>
 
-<script src="app.js"></script>
+<script src="app.js?v=hb1"></script>
 </body>
 </html>

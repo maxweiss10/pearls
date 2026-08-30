@@ -76,9 +76,11 @@ a:hover{text-decoration:underline; text-underline-offset:2px}
 .wb:hover{background:var(--hover); border-color:var(--gray); text-decoration:none}
 
 /* ---------- tabs ---------- */
-#notesview[hidden],#wbview[hidden],#notesbar[hidden]{display:none !important}
+#notesview[hidden],#wbview[hidden],#notesbar[hidden],#schedview[hidden],#resview[hidden]{display:none !important}
 .tabs{border-bottom:1px solid var(--line); background:var(--page)}
-.tabrow{display:flex; gap:var(--s-4)}
+.tabrow{display:flex; gap:var(--s-4); overflow-x:auto; scrollbar-width:none}
+.tabrow::-webkit-scrollbar{display:none}
+.tab{flex:none; white-space:nowrap}
 .tab{
   font-family:inherit; font-size:var(--t-sm); font-weight:500; color:var(--slate); cursor:pointer;
   background:none; border:0; border-bottom:2px solid transparent; padding:10px 2px 9px;
@@ -113,10 +115,14 @@ a.wbr .wbr-t{color:var(--link)}
 .wbr-c{display:block; font-size:var(--t-xs); color:var(--slate); margin-top:1px}
 .wbr-snip{display:block; font-size:var(--t-xs); color:var(--gray); margin-top:3px; line-height:1.5}
 .wbr-snip mark{background:var(--mark); color:var(--mark-ink); padding:0 1px}
-.wb-resources{margin-top:var(--s-7); border-top:1px solid var(--line); padding-top:var(--s-4)}
-.wb-resources p{margin:var(--s-2) 0; font-size:var(--t-sm)}
-.wb-resources .mut{font-style:normal}
-.footlinks{display:flex; gap:var(--s-4)}
+/* ---------- schedule tab ---------- */
+.schedview{display:flex; flex-direction:column; height:calc(100vh - 104px); height:calc(100dvh - 104px)}
+.viewbar{font-size:var(--t-xs); color:var(--slate); margin:var(--s-2) auto; width:100%}
+#schedframe{flex:1; width:100%; border:0; border-top:1px solid var(--line); background:var(--page)}
+
+/* ---------- resources tab ---------- */
+.resview{max-width:952px; padding-top:var(--s-5); padding-bottom:var(--s-8); min-height:60vh}
+.res-hint{font-size:var(--t-xs); color:var(--slate); margin-top:var(--s-5)}
 
 /* ---------- search ---------- */
 .searchbar{position:sticky; top:0; z-index:20; background:var(--page); padding:var(--s-2) 0; border-bottom:1px solid var(--line)}
