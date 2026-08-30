@@ -1,11 +1,11 @@
-/* Pearl — command-palette search over section-grouped notes, with a collapsible
-   sidebar (counts, recently added), per-note subsection TOC, scroll-spy and
-   keyboard navigation. */
+/* Pearl — section-grouped notes with ONE all-encompassing search bar (White Book
+   sections + pages, pearls, resources) where the old pearls-only palette lived,
+   plus a collapsible sidebar (counts, recently added), scroll-spy and keyboard
+   navigation. Cmd-F covers literal in-page pearl lookups. */
 (function () {
   'use strict';
 
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const TYPE_TOKENS = ['chalktalk', 'slide', 'paper', 'photo', 'note', 'video'];
 
   /* Lexical medical abbreviations → expansions. Purely terminological. */
   const SYNONYMS = {
@@ -33,15 +33,11 @@
   };
 
   const $list = document.getElementById('list');
-  const $q = document.getElementById('q');
-  const $chips = document.getElementById('chips');
   const $count = document.getElementById('count');
-  const $empty = document.getElementById('empty');
   const $toc = document.getElementById('toc');
   const $tocm = document.getElementById('tocm');
   const $tocmList = document.getElementById('tocm-list');
   const $keys = document.getElementById('keys');
-  const $pal = document.getElementById('pal');
 
   let entries = [];
   let sectionHeads = [];
@@ -155,19 +151,7 @@
     });
   }
 
-  /* ---------- matching (word-boundary for short tokens; whole expansion) ---------- */
-  function hit(t, hay) {
-    if (t.length > 3) return hay.indexOf(t) !== -1;
-    const safe = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp('(^|[^a-z0-9])' + safe + '([^a-z0-9]|$)').test(hay);
-  }
-  function matches(term, hay) {
-    if (hit(term, hay)) return true;
-    const phrase = SYNONYMS[term];
-    if (!phrase) return false;
-    if (hay.indexOf(phrase) !== -1) return true;
-    return phrase.split(/\s+/).every(function (w) { return hit(w, hay); });
-  }
+  /* ---------- synonym expansion (feeds snippets + highlight marks) ---------- */
   function expandedTerms(terms) {
     const out = terms.slice();
     terms.forEach(function (t) {
@@ -176,70 +160,8 @@
     return out.filter(function (t, i, a) { return a.indexOf(t) === i; });
   }
 
-  /* ---------- chip filter (inline card filtering) ---------- */
-  function applyFilter() {
-    const q = $q.dataset.chip || '';
-    let shown = 0;
-    entries.forEach(function (e) {
-      const match = !q || matches(q, e.haystack);
-      e.card.hidden = !match;
-      if (match) shown++;
-    });
-    sectionHeads.forEach(function (s) {
-      s.el.hidden = !s.entries.some(function (e) { return !e.card.hidden; });
-    });
-    $count.textContent = q ? shown + ' / ' + entries.length + ' notes' : entries.length + ' notes';
-    $empty.hidden = shown !== 0;
-    document.querySelectorAll('.chip').forEach(function (c) {
-      c.classList.toggle('on', c.dataset.kw === q);
-    });
-    onScroll();
-  }
-
-  function buildChips(metas) {
-    const freq = Object.create(null);
-    metas.forEach(function (m) {
-      m.keywords.split(',').forEach(function (k) {
-        k = k.trim().toLowerCase();
-        if (k) freq[k] = (freq[k] || 0) + 1;
-      });
-    });
-    TYPE_TOKENS.filter(function (t) { return freq[t]; }).forEach(function (kw) {
-      const b = document.createElement('button');
-      b.className = 'chip';
-      b.type = 'button';
-      b.dataset.kw = kw;
-      b.textContent = kw;
-      b.addEventListener('click', function () {
-        $q.dataset.chip = ($q.dataset.chip === kw) ? '' : kw;
-        applyFilter();
-      });
-      $chips.appendChild(b);
-    });
-  }
-
-  /* ---------- command palette ---------- */
-  let palResults = [];
-  let palIndex = 0;
+  /* ---------- jump highlight + snippets (shared with the search results) ---------- */
   let lastJump = null;
-
-  function scoreEntry(e, terms) {
-    const q = terms.join(' ');
-    let total = 0;
-    for (let i = 0; i < terms.length; i++) {
-      const t = terms[i];
-      let s = 0;
-      if (matches(t, e.titleLower)) {
-        s = e.titleLower.indexOf(t) === 0 ? 500 : 300;
-      } else if (matches(t, e.headingsLower)) s = 200;
-      else if (matches(t, e.keysLower)) s = 150;
-      else if (matches(t, e.bodyLower)) s = 100;
-      if (!s) return 0; /* every term must match somewhere */
-      total += s;
-    }
-    if (e.titleLower === q) total += 1000;
-    return total;
-  }
 
   function snippetFor(e, terms) {
     const all = expandedTerms(terms);
@@ -256,122 +178,9 @@
     return s;
   }
 
-  function closePal() {
-    $pal.hidden = true;
-    $pal.innerHTML = '';
-    palResults = [];
-    palIndex = 0;
-  }
-
   function clearJumpHighlight() {
     if (lastJump) { lastJump.bodyEl.innerHTML = lastJump.originalBody; lastJump = null; }
   }
-
-  function openResult(i) {
-    const r = palResults[i];
-    if (!r) return;
-    const terms = $q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    closePal();
-    $q.value = '';
-    $q.blur();
-    clearJumpHighlight();
-    r.entry.card.hidden = false;
-    /* instant, per spec — smooth scrollIntoView is also unreliable in Chrome here */
-    r.entry.card.scrollIntoView({ block: 'start', behavior: 'instant' });
-    if (terms.length) {
-      highlight(r.entry.bodyEl, expandedTerms(terms));
-      lastJump = r.entry;
-    }
-    activeId = r.entry.meta.id; /* anchor j/k immediately, before the spy ticks */
-  }
-
-  function renderPal() {
-    const q = $q.value.trim().toLowerCase();
-    const terms = q.split(/\s+/).filter(Boolean);
-    if (!terms.length) { closePal(); return; }
-
-    palResults = entries
-      .map(function (e) { return { entry: e, score: scoreEntry(e, terms) }; })
-      .filter(function (r) { return r.score > 0; })
-      .sort(function (a, b) { return b.score - a.score; })
-      .slice(0, 8);
-    palIndex = 0;
-
-    $pal.innerHTML = '';
-    if (!palResults.length) {
-      const none = document.createElement('div');
-      none.className = 'pal-none';
-      none.textContent = 'No matches — try a broader term or an abbreviation (e.g. “esbl”, “afib”).';
-      $pal.appendChild(none);
-    } else {
-      const marks = expandedTerms(terms);
-      palResults.forEach(function (r, i) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'pal-item' + (i === 0 ? ' on' : '');
-        btn.setAttribute('role', 'option');
-
-        const row = document.createElement('div');
-        row.className = 'pal-t';
-        const title = document.createElement('span');
-        title.className = 'pal-title';
-        title.textContent = r.entry.meta.title;
-        highlight(title, marks);
-        const sec = document.createElement('span');
-        sec.className = 'pal-sec';
-        sec.textContent = r.entry.meta.section;
-        row.appendChild(title);
-        row.appendChild(sec);
-        btn.appendChild(row);
-
-        const snip = document.createElement('div');
-        snip.className = 'pal-snip';
-        snip.textContent = snippetFor(r.entry, terms);
-        highlight(snip, marks);
-        btn.appendChild(snip);
-
-        btn.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
-        btn.addEventListener('click', function () { openResult(i); });
-        btn.addEventListener('mousemove', function () { if (palIndex !== i) setPalIndex(i, true); });
-        $pal.appendChild(btn);
-      });
-      const hint = document.createElement('div');
-      hint.className = 'pal-hint';
-      hint.innerHTML = '<span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span>';
-      $pal.appendChild(hint);
-    }
-    $pal.hidden = false;
-  }
-
-  function setPalIndex(i, noScroll) {
-    palIndex = i;
-    const items = $pal.querySelectorAll('.pal-item');
-    items.forEach(function (el, j) { el.classList.toggle('on', j === i); });
-    if (!noScroll && items[i]) items[i].scrollIntoView({ block: 'nearest' });
-  }
-
-  let debounceTimer = null;
-  $q.addEventListener('input', function () {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(renderPal, 60);
-  });
-  $q.addEventListener('focus', function () { if ($q.value.trim()) renderPal(); });
-  $q.addEventListener('keydown', function (ev) {
-    if (ev.key === 'ArrowDown' && !$pal.hidden) { ev.preventDefault(); setPalIndex(Math.min(palResults.length - 1, palIndex + 1)); }
-    else if (ev.key === 'ArrowUp' && !$pal.hidden) { ev.preventDefault(); setPalIndex(Math.max(0, palIndex - 1)); }
-    else if (ev.key === 'Enter') {
-      ev.preventDefault();
-      if ($pal.hidden && $q.value.trim()) renderPal();
-      openResult(palIndex);
-    } else if (ev.key === 'Escape') {
-      ev.stopPropagation();
-      if (!$pal.hidden) closePal();
-      else { $q.value = ''; $q.blur(); clearJumpHighlight(); }
-    }
-  });
-  document.addEventListener('click', function (ev) {
-    if (!$pal.hidden && !$pal.contains(ev.target) && ev.target !== $q) closePal();
-  });
 
   /* ---------- sidebar ---------- */
   function listHtml(ids) {
@@ -494,17 +303,19 @@
     const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
     if (ev.key === 'Escape') {
       if ($keys && $keys.open) $keys.close();
-      if ($tocm && $tocm.open) $tocm.open = false;
+      else if ($tocm && $tocm.open) $tocm.open = false;
+      else if (document.body.classList.contains('searching')) { $wbq.value = ''; wbSearch(); }
       return;
     }
     if (typing || ev.metaKey || ev.ctrlKey || ev.altKey) return;
     if (ev.key === '/') {
       ev.preventDefault();
-      if (document.body.classList.contains('wbmode')) document.getElementById('wbq').focus();
-      else $q.focus();
+      if (activeTab !== 'notes') switchTab('notes');
+      $wbq.focus();
       return;
     }
     if (ev.key === '?') { ev.preventDefault(); if ($keys) ($keys.open ? $keys.close() : $keys.showModal()); return; }
+    if (document.body.classList.contains('searching')) return; /* j/k etc. act on the hidden notes list */
     if (ev.key === 'j') { ev.preventDefault(); jump(1); return; }
     if (ev.key === 'k') { ev.preventDefault(); jump(-1); return; }
     if (ev.key === 'g') { gPending = true; setTimeout(function () { gPending = false; }, 700); return; }
@@ -547,7 +358,6 @@
         const clone = built.bodyEl.cloneNode(true);
         clone.querySelectorAll('style').forEach(function (st) { st.remove(); });
         const bodyText = ((clone.textContent || '') + ' ' + alts).replace(/\s+/g, ' ').trim();
-        const headings = Array.prototype.map.call(built.bodyEl.querySelectorAll('.sec,.caps'), function (x) { return x.textContent; }).join(' ');
         const e = {
           meta: meta,
           card: built.card,
@@ -555,20 +365,17 @@
           titleEl: built.titleEl,
           originalBody: built.bodyEl.innerHTML,
           titleLower: meta.title.toLowerCase(),
-          headingsLower: headings.toLowerCase(),
           keysLower: (meta.keywords + ' ' + (meta.aliases || '') + ' ' + meta.section).toLowerCase(),
           bodyText: bodyText,
-          bodyLower: bodyText.toLowerCase(),
-          haystack: (meta.title + ' ' + meta.section + ' ' + meta.keywords + ' ' + (meta.aliases || '') + ' ' + bodyText).toLowerCase()
+          bodyLower: bodyText.toLowerCase()
         };
         entries.push(e);
         rec.entries.push(e);
       });
     });
 
-    buildChips(metas);
     renderToc();
-    applyFilter();
+    $count.textContent = entries.length + ' notes';
 
     if (location.hash) {
       const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
@@ -590,19 +397,14 @@
   if ($keys) {
     $keys.addEventListener('click', function (ev) { if (ev.target === $keys) $keys.close(); });
   }
-  const $clear = document.getElementById('clearfilter');
-  if ($clear) $clear.addEventListener('click', function () { $q.dataset.chip = ''; applyFilter(); });
-
-  /* ---------- White Book tab (plain-language search over the PDF + pearls) ---------- */
+  /* ---------- unified search (White Book sections + pages, pearls, resources) ---------- */
   const WB_VIEWER = 'https://maxweiss10.github.io/whitebook/pdfjs/web/viewer.html?file=../../whitebook.pdf';
   const $tabNotes = document.getElementById('tab-notes');
-  const $tabWb = document.getElementById('tab-wb');
   const $notesview = document.getElementById('notesview');
   const $notesbar = document.getElementById('notesbar');
   const $wbview = document.getElementById('wbview');
   const $wbq = document.getElementById('wbq');
   const $wbresults = document.getElementById('wbresults');
-  const $wbhint = document.getElementById('wbhint');
 
   /* words that carry no lookup signal in a clinical query */
   const WB_STOP = new Set(['a','an','the','of','for','to','in','on','at','and','or','vs','with','without',
@@ -866,10 +668,15 @@
     return p;
   }
 
+  let resKicked = false;
   function wbSearch() {
     const q = $wbq.value.trim();
-    if (!q) { $wbresults.innerHTML = ''; $wbhint.hidden = false; return; }
-    $wbhint.hidden = true;
+    syncSearch();
+    if (!q) { $wbresults.innerHTML = ''; return; }
+    if (!resKicked) { /* resources join the index lazily, on the first real query */
+      resKicked = true;
+      ensureResources().then(function () { if ($wbq.value.trim()) wbSearch(); }).catch(function () {});
+    }
     if (wbLoadState !== 2) { wbEnsureIndex(); return; }
 
     let concepts = wbConcepts(q);
@@ -1082,7 +889,8 @@
         highlight(snip, marks);
         b.appendChild(snip);
         b.addEventListener('click', function () {
-          switchTab('notes');
+          $wbq.value = '';
+          wbSearch(); /* clears results and brings the notes view back */
           clearJumpHighlight();
           h.e.card.hidden = false;
           h.e.card.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -1095,7 +903,7 @@
     }
   }
 
-  /* ---------- home-base tabs (Pearls · Schedule · Search · Resources) ---------- */
+  /* ---------- home-base tabs (Pearls · Resources · Schedule) ---------- */
   const SCHED_URL = 'https://maxweiss10.github.io/intern-year-schedule/';
   const $schedview = document.getElementById('schedview');
   const $schedframe = document.getElementById('schedframe');
@@ -1105,12 +913,11 @@
   const TABS = {
     notes: { btn: $tabNotes, views: [$notesview, $notesbar], hash: '' },
     schedule: { btn: document.getElementById('tab-schedule'), views: [$schedview], hash: '#schedule' },
-    wb: { btn: $tabWb, views: [$wbview], hash: '#wb' },
     resources: { btn: document.getElementById('tab-resources'), views: [$resview], hash: '#resources' }
   };
 
   let resData = null, resPromise = null, resRendered = false;
-  function ensureResources() { /* shared by the Resources tab AND the Search tab */
+  function ensureResources() { /* shared by the Resources tab AND the search bar */
     if (!resPromise) {
       resPromise = fetch('resources.json', { cache: 'no-store' })
         .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
@@ -1150,42 +957,49 @@
       });
   }
 
+  let activeTab = 'notes';
   function switchTab(which) {
     if (!TABS[which]) which = 'notes';
+    activeTab = which;
     Object.keys(TABS).forEach(function (name) {
       const t = TABS[name];
       const on = name === which;
       if (t.btn) { t.btn.classList.toggle('on', on); t.btn.setAttribute('aria-selected', String(on)); }
       t.views.forEach(function (v) { if (v) v.hidden = !on; });
     });
-    document.body.classList.toggle('wbmode', which === 'wb');
     const hash = TABS[which].hash;
     if (hash && location.hash !== hash) history.replaceState(null, '', hash);
     else if (!hash && /^#(wb|schedule|resources)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
-    if (which === 'wb') {
-      wbEnsureIndex();
-      ensureResources().then(function () { if ($wbq.value.trim()) wbSearch(); }).catch(function () {});
-      $wbq.focus();
-    }
-    else if (which === 'schedule' && $schedframe && !$schedframe.src) $schedframe.src = SCHED_URL;
+    if (which === 'schedule' && $schedframe && !$schedframe.src) $schedframe.src = SCHED_URL;
     else if (which === 'resources') renderResourcesTab();
+    syncSearch();
   }
 
-  if ($tabWb && $wbview) {
-    Object.keys(TABS).forEach(function (name) {
-      if (TABS[name].btn) TABS[name].btn.addEventListener('click', function () { switchTab(name); });
-    });
-    let wbDebounce = null;
-    $wbq.addEventListener('input', function () {
-      clearTimeout(wbDebounce);
-      wbDebounce = setTimeout(wbSearch, 90);
-    });
-    $wbq.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Enter') { ev.preventDefault(); wbSearch(); }
-      else if (ev.key === 'Escape') { $wbq.value = ''; wbSearch(); }
-    });
-    const m = location.hash.match(/^#(wb|schedule|resources)$/);
-    if (m) switchTab(m[1]);
+  /* a live query swaps the notes list for the results panel; clearing swaps back */
+  function syncSearch() {
+    const on = activeTab === 'notes' && !!$wbq.value.trim();
+    document.body.classList.toggle('searching', on);
+    $wbview.hidden = !on;
+    if (activeTab === 'notes') $notesview.hidden = on;
+  }
+
+  Object.keys(TABS).forEach(function (name) {
+    if (TABS[name].btn) TABS[name].btn.addEventListener('click', function () { switchTab(name); });
+  });
+  let wbDebounce = null;
+  $wbq.addEventListener('input', function () {
+    clearTimeout(wbDebounce);
+    wbDebounce = setTimeout(wbSearch, 90);
+  });
+  $wbq.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); wbSearch(); }
+    else if (ev.key === 'Escape') { ev.stopPropagation(); $wbq.value = ''; wbSearch(); $wbq.blur(); }
+  });
+  const tabHash = location.hash.match(/^#(schedule|resources)$/);
+  if (tabHash) switchTab(tabHash[1]);
+  else if (location.hash === '#wb') { /* legacy Search-tab links land on the unified bar */
+    history.replaceState(null, '', location.pathname + location.search);
+    $wbq.focus();
   }
 
   /* ---------- draft preview (#draft=id1,id2 — fragments served from the draft branch) ---------- */

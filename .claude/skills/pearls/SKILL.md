@@ -161,9 +161,9 @@ git push origin --delete draft; git branch -D draft
 
 The range form publishes every draft commit even if the single-commit rule slipped. If the cherry-pick conflicts on `manifest.json` (main moved since the draft), keep BOTH changes with the newest entry first, `git add manifest.json` and `git cherry-pick --continue`.
 
-## 7.5 · The site is a 4-tab home base (Aug 30, 2026)
+## 7.5 · The site is a 3-tab home base with ONE search bar (Aug 30, 2026)
 
-`index.html` has tabs: **Pearls** (the notes — everything above), **Schedule** (live iframe of maxweiss10.github.io/intern-year-schedule — never copy that site's files into this repo; the iframe keeps its backend intact), **Search** (plain-language search over the White Book PDF + pearls; index = `whitebook-index.json`, rebuilt by `tools/build_whitebook_index.py` if whitebook.pdf ever changes; alias map `WB_ALIAS` in app.js), **Resources** (rendered from `resources.json`). Site-level changes (tabs, app.js, css) canNOT be previewed via `#draft=` — preview those with a local `python3 -m http.server` walkthrough instead, and still get an explicit go-ahead before pushing to main. Entry work is untouched by all of this.
+`index.html` has tabs: **Pearls** (the notes), **Resources** (rendered from `resources.json`), **Schedule** (live iframe of maxweiss10.github.io/intern-year-schedule — never copy that site's files into this repo; the iframe keeps its backend intact). The sticky bar at the top of the Pearls tab is the one all-encompassing search — plain language over the full White Book PDF + pearls + resources (index = `whitebook-index.json`, rebuilt by `tools/build_whitebook_index.py` if whitebook.pdf ever changes; alias map `WB_ALIAS` in app.js). A live query swaps the notes list for grouped results; Esc or clearing swaps back. There is deliberately NO pearls-only search — Cmd-F covers literal lookups on the notes page; do not reintroduce a palette. Site-level changes (tabs, app.js, css) canNOT be previewed via `#draft=` — preview those with a local `python3 -m http.server` walkthrough instead, and still get an explicit go-ahead before pushing to main. Entry work is untouched by all of this.
 
 ## 8 · Report
 

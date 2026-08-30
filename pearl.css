@@ -91,19 +91,9 @@ a:hover{text-decoration:underline; text-underline-offset:2px}
 .tab:hover{color:var(--ink)}
 .tab.on{color:var(--ink); font-weight:600; border-bottom-color:var(--ink)}
 
-/* ---------- White Book tab ---------- */
-.wbview{max-width:952px; padding-top:var(--s-5); padding-bottom:var(--s-8); min-height:60vh}
-.wb-search #wbq{
-  -webkit-appearance:none; appearance:none; width:100%;
-  font-family:inherit; font-size:var(--t-md); color:var(--ink);
-  background:var(--zebra); border:1px solid var(--line-2); border-radius:8px;
-  padding:12px 14px; outline:none;
-  transition:border-color var(--tap) ease, box-shadow var(--tap) ease, background var(--tap) ease;
-}
-.wb-search #wbq::placeholder{color:var(--slate)}
-.wb-search #wbq:focus{background:var(--page); border-color:var(--link); box-shadow:0 0 0 3px color-mix(in srgb, var(--link) 12%, transparent)}
-.wb-hint{font-size:var(--t-sm); color:var(--gray); margin:var(--s-2) 2px 0}
-.wb-results{margin-top:var(--s-4)}
+/* ---------- unified search results (shown while a query is live) ---------- */
+.wbview{max-width:952px; padding-top:var(--s-3); padding-bottom:var(--s-8); min-height:60vh}
+.wb-results{margin-top:var(--s-2)}
 .wb-status{font-size:var(--t-sm); color:var(--gray); margin:var(--s-4) 2px}
 .wbr{
   display:block; width:100%; text-align:left; font-family:inherit; font-size:var(--t-sm);
@@ -133,47 +123,19 @@ a.wbr .wbr-t{color:var(--link)}
 .searchbar{position:sticky; top:0; z-index:20; background:var(--page); padding:var(--s-2) 0; border-bottom:1px solid var(--line)}
 .searchbar .wrap{position:relative}
 .sbrow{display:flex; gap:var(--s-2); align-items:stretch}
-#q{
+#wbq{
   -webkit-appearance:none; appearance:none;
   flex:1; min-width:0; font-family:inherit; font-size:var(--t-md); color:var(--ink);
   background:var(--zebra); border:1px solid var(--line-2); border-radius:8px;
   padding:11px 14px; outline:none;
   transition:border-color var(--tap) ease, box-shadow var(--tap) ease, background var(--tap) ease;
 }
-#q::placeholder{color:var(--slate)}
-#q:hover{background:var(--hover)}
-#q:focus{background:var(--page); border-color:var(--link); box-shadow:0 0 0 3px color-mix(in srgb, var(--link) 12%, transparent)}
-.chips{display:flex; gap:var(--s-1); overflow-x:auto; padding:var(--s-2) 0 0; scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{
-  flex:none; font-family:inherit; font-size:var(--t-xs); font-weight:500; color:var(--slate); cursor:pointer;
-  background:none; border:0; border-radius:var(--radius); padding:6px 11px;
-  transition:background var(--tap) ease, color var(--tap) ease;
-}
-.chip:hover{background:var(--hover); color:var(--ink)}
-.chip.on{background:var(--ink); color:var(--page)}
+#wbq::placeholder{color:var(--slate)}
+#wbq:hover{background:var(--hover)}
+#wbq:focus{background:var(--page); border-color:var(--link); box-shadow:0 0 0 3px color-mix(in srgb, var(--link) 12%, transparent)}
 
 /* command-palette results */
-.pal{
-  position:absolute; left:var(--s-4); right:var(--s-4); top:calc(100% - 2px); z-index:24;
-  background:var(--page); border:1px solid var(--line-2); border-radius:10px;
-  box-shadow:0 14px 40px var(--shadowc); overflow:hidden; max-height:min(430px, 62vh); overflow-y:auto;
-}
-.pal[hidden]{display:none}
-.pal-item{
-  display:block; width:100%; text-align:left; font-family:inherit; cursor:pointer;
-  background:none; border:0; border-left:2px solid transparent;
-  padding:10px 14px; border-bottom:1px solid var(--line);
-}
-.pal-item:last-child{border-bottom:0}
-.pal-item.on{background:var(--hover); border-left-color:var(--ink)}
-.pal-t{display:flex; align-items:baseline; gap:var(--s-3)}
-.pal-title{font-size:var(--t-sm); font-weight:600; color:var(--ink); line-height:1.35}
-.pal-sec{margin-left:auto; flex:none; font-size:var(--t-xs); color:var(--slate); white-space:nowrap}
-.pal-snip{margin-top:1px; font-size:var(--t-xs); color:var(--gray); line-height:1.5; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
-.pal-none{padding:12px 14px; font-size:var(--t-sm); color:var(--gray); font-style:italic}
-.pal mark{background:var(--mark); color:var(--mark-ink); padding:0 1px; border-radius:2px}
-.pal-hint{position:sticky; bottom:0; display:flex; gap:var(--s-4); padding:6px 14px; background:var(--zebra); border-top:1px solid var(--line); font-size:11px; color:var(--slate)}
+.wb-results mark{background:var(--mark); color:var(--mark-ink); padding:0 1px; border-radius:2px}
 
 .tocm{flex:none; display:flex}
 .tocm summary{
@@ -349,7 +311,6 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
 /* ---------- phones ---------- */
 @media (max-width:600px){
   .wrap{padding:0 var(--s-3)}
-  .pal{left:var(--s-3); right:var(--s-3); max-height:56vh}
   .tocm > div{left:var(--s-3); right:var(--s-3)}
   .top{padding-top:calc(var(--s-3) + env(safe-area-inset-top))}
   .card h2{font-size:var(--t-md)}
@@ -365,18 +326,17 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
   .mlab{display:inline; font-size:var(--t-xs); font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--slate); margin-right:var(--s-2)}
   .duo{grid-template-columns:1fr; gap:var(--s-4)}
   /* comfortable tap targets */
-  .chip{padding:9px 13px}
   .tocm li a,.tocm .toc-recent a{padding-top:9px; padding-bottom:9px}
   .tocm .toc-sec-link{padding-top:8px; padding-bottom:8px}
-  .pal-item{padding:12px 14px}
     }
 
 /* ---------- wide ---------- */
 @media (min-width:1180px){
   .tocm{display:none}
   .top.wrap,.searchbar .wrap,.layout.wrap,.tabs .wrap{max-width:1240px}
-  .searchbar .sbrow,.searchbar .chips{max-width:920px; margin-left:288px}
-  .pal{left:288px; right:0; max-width:920px}
+  .searchbar .sbrow{max-width:920px; margin-left:288px}
+  .wbview.wrap{max-width:1240px}
+  .wb-results{max-width:920px; margin-left:288px}
   .layout{display:grid; grid-template-columns:256px minmax(0,920px); gap:var(--s-6); align-items:start}
   .toc{display:block; position:sticky; top:72px; max-height:calc(100vh - 96px); overflow-y:auto; padding:var(--s-5) var(--s-1) var(--s-5) 0; scrollbar-width:thin}
   .card > header,.sechead,.meta{margin-left:-24px}
