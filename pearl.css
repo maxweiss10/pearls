@@ -80,7 +80,9 @@ a:hover{text-decoration:underline; text-underline-offset:2px}
 .tabs{border-bottom:1px solid var(--line); background:var(--page)}
 .tabrow{display:flex; gap:var(--s-4); overflow-x:auto; scrollbar-width:none}
 .tabrow::-webkit-scrollbar{display:none}
-.tab{flex:none; white-space:nowrap}
+.tab{flex:none; white-space:nowrap; display:inline-flex; align-items:center; gap:7px}
+.tab svg{stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.85}
+.tab.on svg{opacity:1}
 .tab{
   font-family:inherit; font-size:var(--t-sm); font-weight:500; color:var(--slate); cursor:pointer;
   background:none; border:0; border-bottom:2px solid transparent; padding:10px 2px 9px;

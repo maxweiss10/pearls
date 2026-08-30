@@ -986,10 +986,31 @@
     pearlHits.sort(function (a, b) { return b.score - a.score; });
     const topPearls = pearlHits.slice(0, 5);
 
+    /* resources: every concept in the row's title / desc / url */
+    let resHits = [];
+    if (resData) {
+      resData.forEach(function (d) {
+        let s = 0;
+        for (let c = 0; c < concepts.length; c++) {
+          const alts = concepts[c];
+          if (wbMatchConceptNet(alts, d.nT)) s += 300;
+          else if (wbMatchConceptNet(alts, d.nD)) s += 120;
+          else if (wbMatchConceptNet(alts, d.nU)) s += 60;
+          else { s = 0; break; }
+        }
+        if (s) {
+          phrases.forEach(function (ph) { if (d.nT.indexOf(ph.s) !== -1 || d.nD.indexOf(ph.s) !== -1) s += ph.w; });
+          resHits.push({ d: d, score: s });
+        }
+      });
+      resHits.sort(function (a, b) { return b.score - a.score; });
+      resHits = resHits.slice(0, 4);
+    }
+
     /* render */
     $wbresults.innerHTML = '';
-    if (!topTopics.length && !topPages.length && !topPearls.length) {
-      wbStatus('Nothing found for “' + q + '” — try a different word for it (or ask NotebookLM below).');
+    if (!topTopics.length && !topPages.length && !topPearls.length && !resHits.length) {
+      wbStatus('Nothing found for “' + q + '” — try a different word for it (or ask NotebookLM in Resources).');
       return;
     }
 
@@ -1003,6 +1024,26 @@
         a.innerHTML =
           '<span class="wbr-t">' + esc(h.o.t) + (h.o.in ? ' <span class="wbr-in">in ' + esc(h.o.in) + '</span>' : '') + '</span>' +
           '<span class="wbr-c">' + esc(h.o.c) + ' · p. ' + h.o.p + ' ↗</span>';
+        $wbresults.appendChild(a);
+      });
+    }
+
+    if (resHits.length) {
+      $wbresults.appendChild(wbGroup('Resources'));
+      resHits.forEach(function (h) {
+        const res = h.d.res;
+        const a = document.createElement('a');
+        a.className = 'wbr';
+        a.href = res.url;
+        a.target = '_blank'; a.rel = 'noopener';
+        a.innerHTML = '<span class="wbr-t">' + esc(res.title) + ' ↗</span>';
+        if (res.desc) {
+          const snip = document.createElement('span');
+          snip.className = 'wbr-snip';
+          snip.textContent = res.desc;
+          highlight(snip, marks);
+          a.appendChild(snip);
+        }
         $wbresults.appendChild(a);
       });
     }
@@ -1068,15 +1109,28 @@
     resources: { btn: document.getElementById('tab-resources'), views: [$resview], hash: '#resources' }
   };
 
-  let resLoaded = false;
-  function loadResources() {
-    if (resLoaded) return;
-    resLoaded = true;
-    fetch('resources.json', { cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-      .then(function (list) {
+  let resData = null, resPromise = null, resRendered = false;
+  function ensureResources() { /* shared by the Resources tab AND the Search tab */
+    if (!resPromise) {
+      resPromise = fetch('resources.json', { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+        .then(function (list) {
+          resData = list.map(function (res) {
+            return { res: res, nT: wbNormalize(res.title), nD: wbNormalize(res.desc || ''), nU: wbNormalize(res.url) };
+          });
+          return resData;
+        });
+    }
+    return resPromise;
+  }
+  function renderResourcesTab() {
+    ensureResources()
+      .then(function (data) {
+        if (resRendered) return;
+        resRendered = true;
         $reslist.innerHTML = '';
-        list.forEach(function (res) {
+        data.forEach(function (d) {
+          const res = d.res;
           const a = document.createElement('a');
           a.className = 'wbr';
           a.href = res.url;
@@ -1105,9 +1159,13 @@
     const hash = TABS[which].hash;
     if (hash && location.hash !== hash) history.replaceState(null, '', hash);
     else if (!hash && /^#(wb|schedule|resources)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
-    if (which === 'wb') { wbEnsureIndex(); $wbq.focus(); }
+    if (which === 'wb') {
+      wbEnsureIndex();
+      ensureResources().then(function () { if ($wbq.value.trim()) wbSearch(); }).catch(function () {});
+      $wbq.focus();
+    }
     else if (which === 'schedule' && $schedframe && !$schedframe.src) $schedframe.src = SCHED_URL;
-    else if (which === 'resources') loadResources();
+    else if (which === 'resources') renderResourcesTab();
   }
 
   if ($tabWb && $wbview) {
