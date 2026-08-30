@@ -33,7 +33,14 @@
   </div>
 </header>
 
-<div class="searchbar">
+<nav class="tabs" aria-label="Views">
+  <div class="wrap tabrow">
+    <button id="tab-notes" class="tab on" type="button" role="tab" aria-selected="true">Notes</button>
+    <button id="tab-wb" class="tab" type="button" role="tab" aria-selected="false">White Book search</button>
+  </div>
+</nav>
+
+<div class="searchbar" id="notesbar">
   <div class="wrap">
     <div class="sbrow">
       <input id="q" type="search" placeholder="Search notes, drugs, abbreviations…  ( / )" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Search notes" role="combobox" aria-expanded="false" aria-controls="pal">
@@ -47,7 +54,7 @@
   </div>
 </div>
 
-<div class="layout wrap">
+<div class="layout wrap" id="notesview">
   <nav id="toc" class="toc" aria-label="Table of contents"></nav>
   <div class="maincol">
     <main id="list"><p class="loading">Loading notes…</p></main>
@@ -55,9 +62,26 @@
   </div>
 </div>
 
+<div class="wrap wbview" id="wbview" hidden>
+  <div class="wb-search">
+    <input id="wbq" type="search" placeholder="Plain language is fine — “blood pressure management”, “low sodium”, “when to tap a belly”…"
+           autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Search the White Book">
+    <p class="wb-hint" id="wbhint">Searches every page of the MGH White Book <em>and</em> your pearls, and jumps you to the exact page.</p>
+  </div>
+  <div id="wbresults" class="wb-results" aria-live="polite"></div>
+  <div class="wb-resources">
+    <p class="toc-title">Resources</p>
+    <p><a href="https://notebook.google.com/notebook/9ac9528e-9fa1-4992-8ea4-4723ef10b30b?authuser=0&amp;pageId=none" target="_blank" rel="noopener">Ask NotebookLM ↗</a><span class="mut"> — AI Q&amp;A with the White Book loaded; best for “explain why” questions.</span></p>
+    <p><a href="https://maxweiss10.github.io/whitebook/pdfjs/web/viewer.html?file=../../whitebook.pdf" target="_blank" rel="noopener">Open the White Book ↗</a><span class="mut"> — full PDF viewer, browsable table of contents.</span></p>
+  </div>
+</div>
+
 <footer class="wrap foot">
   <span>Add notes with <span class="code">/pearls</span> in Claude Code — press <kbd>?</kbd> for shortcuts.</span>
-  <a href="https://docs.google.com/document/d/1N8egmcK1GHmA6VPiwi2uGR71VcNt8Ve-M-tMkczFMjc/edit" target="_blank" rel="noopener">Legacy doc archive ↗</a>
+  <span class="footlinks">
+    <a href="https://notebook.google.com/notebook/9ac9528e-9fa1-4992-8ea4-4723ef10b30b?authuser=0&amp;pageId=none" target="_blank" rel="noopener">NotebookLM ↗</a>
+    <a href="https://docs.google.com/document/d/1N8egmcK1GHmA6VPiwi2uGR71VcNt8Ve-M-tMkczFMjc/edit" target="_blank" rel="noopener">Legacy doc archive ↗</a>
+  </span>
 </footer>
 
 <dialog id="keys">

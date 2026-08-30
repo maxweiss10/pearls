@@ -498,7 +498,12 @@
       return;
     }
     if (typing || ev.metaKey || ev.ctrlKey || ev.altKey) return;
-    if (ev.key === '/') { ev.preventDefault(); $q.focus(); return; }
+    if (ev.key === '/') {
+      ev.preventDefault();
+      if (document.body.classList.contains('wbmode')) document.getElementById('wbq').focus();
+      else $q.focus();
+      return;
+    }
     if (ev.key === '?') { ev.preventDefault(); if ($keys) ($keys.open ? $keys.close() : $keys.showModal()); return; }
     if (ev.key === 'j') { ev.preventDefault(); jump(1); return; }
     if (ev.key === 'k') { ev.preventDefault(); jump(-1); return; }
@@ -587,6 +592,376 @@
   }
   const $clear = document.getElementById('clearfilter');
   if ($clear) $clear.addEventListener('click', function () { $q.dataset.chip = ''; applyFilter(); });
+
+  /* ---------- White Book tab (plain-language search over the PDF + pearls) ---------- */
+  const WB_VIEWER = 'https://maxweiss10.github.io/whitebook/pdfjs/web/viewer.html?file=../../whitebook.pdf';
+  const $tabNotes = document.getElementById('tab-notes');
+  const $tabWb = document.getElementById('tab-wb');
+  const $notesview = document.getElementById('notesview');
+  const $notesbar = document.getElementById('notesbar');
+  const $wbview = document.getElementById('wbview');
+  const $wbq = document.getElementById('wbq');
+  const $wbresults = document.getElementById('wbresults');
+  const $wbhint = document.getElementById('wbhint');
+
+  /* words that carry no lookup signal in a clinical query */
+  const WB_STOP = new Set(['a','an','the','of','for','to','in','on','at','and','or','vs','with','without',
+    'how','what','when','where','why','do','does','should','can','i','my','me','is','are','it','about',
+    'management','manage','managing','mgmt','treatment','treat','treating','therapy','therapies',
+    'tips','tip','guide','guidelines','approach','review','overview','basics','workup','evaluation',
+    'eval','ddx','differential','algorithm','protocol','pearls','note','notes','patient','patients','pt','pts']);
+
+  /* plain language / lay phrasing → White Book vocabulary. Alternates >3 chars match as
+     substrings (so stems like "hypertens" cover hypertension + hypertensive). */
+  const WB_ALIAS = {
+    'blood pressure': ['hypertens', 'htn', 'bp'],
+    'high blood pressure': ['hypertens', 'htn'],
+    'low blood pressure': ['hypotens', 'shock', 'pressor'],
+    'blood sugar': ['glucose', 'hyperglycemia', 'diabetes', 'insulin'],
+    'sugar': ['glucose', 'diabetes'],
+    'low sodium': ['hyponatremia', 'sodium'], 'high sodium': ['hypernatremia', 'sodium'],
+    'low potassium': ['hypokalemia', 'potassium'], 'high potassium': ['hyperkalemia', 'potassium'],
+    'low calcium': ['hypocalcemia', 'calcium'], 'high calcium': ['hypercalcemia', 'calcium'],
+    'low magnesium': ['hypomagnesemia', 'magnesium'], 'low phosphate': ['hypophosphatemia', 'phosphate'],
+    'sodium': ['sodium', 'natremia'], 'potassium': ['potassium', 'kalemia'],
+    'calcium': ['calcium', 'calcemia'], 'magnesium': ['magnesium', 'magnesemia'],
+    'heart attack': ['myocardial infarction', 'acute coronary', 'stemi', 'nstemi'],
+    'heart failure': ['heart failure', 'hfref', 'hfpef', 'cardiomyopathy', 'diuresis'],
+    'chest pain': ['chest pain', 'angina', 'acute coronary'],
+    'heart rhythm': ['arrhythmia', 'tachycardia', 'bradycardia', 'fibrillation'],
+    'fast heart': ['tachycardia'], 'slow heart': ['bradycardia'],
+    'blood clot': ['thrombosis', 'embolism', 'dvt', 'anticoagula'],
+    'blood thinner': ['anticoagula', 'warfarin', 'heparin', 'doac', 'apixaban'],
+    'kidney injury': ['acute kidney injury', 'aki', 'renal'],
+    'kidney failure': ['renal failure', 'aki', 'ckd', 'dialysis'],
+    'kidney': ['kidney', 'renal', 'nephro'],
+    'liver failure': ['hepatic failure', 'cirrhosis', 'liver'],
+    'liver': ['liver', 'hepat', 'cirrhosis'],
+    'belly pain': ['abdominal pain'], 'stomach pain': ['abdominal pain', 'epigastric'],
+    'tap belly': ['paracentesis'], 'belly tap': ['paracentesis'], 'fluid belly': ['ascites', 'paracentesis'],
+    'tap': ['paracentesis', 'thoracentesis', 'lumbar puncture'], 'belly': ['abdom', 'ascites'],
+    'afib': ['af', 'atrial fibrillation'], 'aflutter': ['afl', 'atrial flutter'], 'flutter': ['afl', 'atrial flutter'],
+    'lung tap': ['thoracentesis'], 'fluid around lung': ['pleural effusion', 'thoracentesis'],
+    'spinal tap': ['lumbar puncture'],
+    'breathing': ['dyspnea', 'respiratory', 'hypoxem'], 'short of breath': ['dyspnea', 'respiratory distress'],
+    'shortness of breath': ['dyspnea', 'respiratory distress'],
+    'oxygen': ['oxygen', 'hypoxem', 'ventilation'],
+    'blood infection': ['bacteremia', 'sepsis'], 'infection': ['infection', 'antibiotic', 'sepsis'],
+    'antibiotics': ['antibiotic', 'antimicrobial', 'vancomycin', 'cefepime'],
+    'lung infection': ['pneumonia'],
+    'urine infection': ['urinary tract infection', 'pyelonephritis', 'cystitis'],
+    'skin infection': ['cellulitis', 'abscess'],
+    'confusion': ['delirium', 'altered mental status', 'encephalopathy'],
+    'confused': ['delirium', 'altered mental status', 'encephalopathy'],
+    'passing out': ['syncope'], 'fainting': ['syncope'], 'dizzy': ['dizziness', 'vertigo', 'presyncope'],
+    'seizure': ['seizure', 'epilep', 'status epilepticus'],
+    'stroke': ['stroke', 'ischemic', 'tpa', 'thrombectomy', 'cerebrovascular'],
+    'bleeding': ['bleed', 'hemorrhage', 'transfus'],
+    'gi bleed': ['gastrointestinal bleed', 'gib', 'hematochezia', 'melena'],
+    'blood transfusion': ['transfus', 'prbc'],
+    'low blood count': ['anemia'], 'low platelets': ['thrombocytopenia'],
+    'alcohol': ['alcohol', 'ethanol', 'withdrawal', 'ciwa'],
+    'drug overdose': ['overdose', 'toxicity', 'ingestion'],
+    'pain control': ['analgesia', 'opioid', 'pain'], 'pain meds': ['analgesia', 'opioid'],
+    'nausea': ['nausea', 'antiemetic', 'vomiting'],
+    'constipation': ['constipation', 'bowel regimen'],
+    'sleep': ['insomnia', 'sleep'],
+    'anxiety': ['anxiety', 'benzodiazepine'],
+    'blood gas': ['abg', 'vbg', 'acid-base', 'acidosis', 'alkalosis'],
+    'acid base': ['acid-base', 'acidosis', 'alkalosis', 'anion gap'],
+    'iv fluids': ['fluids', 'crystalloid', 'resuscitation', 'maintenance'],
+    'fluids': ['fluids', 'crystalloid', 'volume'],
+    'nutrition': ['nutrition', 'tube feed', 'tpn'],
+    'steroids': ['steroid', 'prednisone', 'corticosteroid'],
+    'diabetes': ['diabetes', 'insulin', 'hyperglycemia', 'dka'],
+    'thyroid': ['thyroid', 'hypothyroid', 'hyperthyroid', 'levothyroxine'],
+    'code': ['cardiac arrest', 'acls', 'resuscitation'],
+    'dying': ['palliative', 'comfort', 'hospice', 'goals of care'],
+    'end of life': ['palliative', 'comfort', 'hospice', 'goals of care'],
+    'goals of care': ['goals of care', 'palliative', 'code status'],
+    'pressors': ['pressor', 'norepinephrine', 'vasopress'],
+    'sedation': ['sedation', 'propofol', 'dexmedetomidine', 'rass'],
+    'ventilator': ['ventilat', 'intubat', 'ardsnet'],
+    'intubation': ['intubat', 'airway', 'rapid sequence'],
+    'fever': ['fever', 'febrile', 'pyrexia'],
+    'rash': ['rash', 'dermat', 'drug eruption'],
+    'gout': ['gout', 'colchicine', 'uric'],
+    'clot in lung': ['pulmonary embolism'],
+    'swollen leg': ['deep vein thrombosis', 'edema', 'cellulitis'],
+    'transplant': ['transplant', 'immunosuppress'],
+    'cancer': ['malignancy', 'oncolog', 'chemotherapy', 'tumor'],
+    'chemo': ['chemotherapy', 'neutropeni'],
+    'discharge': ['discharge', 'disposition'],
+    'consult': ['consult'],
+    'ekg': ['ekg', 'ecg', 'electrocardiogram'],
+    'heparin drip': ['heparin'], 'insulin drip': ['insulin infusion', 'dka']
+  };
+  /* fold the palette's abbreviation map in as alternates too */
+  Object.keys(SYNONYMS).forEach(function (k) {
+    const alts = (WB_ALIAS[k] || []).slice();
+    alts.push(SYNONYMS[k]);
+    SYNONYMS[k].split(/\s+/).forEach(function (w) { if (w.length > 3 && alts.indexOf(w) === -1) alts.push(w); });
+    WB_ALIAS[k] = alts;
+  });
+
+  let wbIndex = null, wbLow = null, wbTopicLow = null, wbTopics = null, wbLoadState = 0; /* 0 idle 1 loading 2 ready 3 failed */
+
+  function wbEnsureIndex() {
+    if (wbLoadState === 1 || wbLoadState === 2) return;
+    wbLoadState = 1;
+    wbStatus('Loading the White Book index — one-time, ~1.5 MB…');
+    fetch('whitebook-index.json')
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (ix) {
+        wbIndex = ix;
+        wbLow = ix.text.map(function (t) { return t.toLowerCase(); });
+        wbTopicLow = ix.outline.map(function (o) { return (o.t + ' ' + (o.in || '')).toLowerCase(); });
+        wbTopics = ix.outline.filter(function (o) { return !o.in; });
+        wbLoadState = 2;
+        wbSearch();
+      })
+      .catch(function () {
+        wbLoadState = 3;
+        wbStatus('Couldn’t load the White Book index — check your connection and reload.');
+      });
+  }
+  function wbStatus(msg) {
+    $wbresults.innerHTML = '<p class="wb-status">' + esc(msg) + '</p>';
+  }
+
+  function wbHitTerm(alt, hay) {
+    if (alt.length > 4) return hay.indexOf(alt) !== -1;      /* long terms are stems: substring */
+    const safe = alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  /* short terms: word-start ("rate" ≠ "incarcerated", "ards" → "ardsnet") */
+    return new RegExp('(^|[^a-z0-9])' + safe).test(hay);
+  }
+  function wbMatchConcept(alts, hay) { /* → matched alternate or null */
+    for (let i = 0; i < alts.length; i++) if (wbHitTerm(alts[i], hay)) return alts[i];
+    return null;
+  }
+  function wbCountAlt(a, hay) {
+    if (a.length > 3) { let c = 0, p = 0; while (c < 6 && (p = hay.indexOf(a, p)) !== -1) { c++; p += a.length; } return c; }
+    return wbHitTerm(a, hay) ? 1 : 0;
+  }
+  function wbConceptScore(alts, hay) { /* the user's own words (alts[0]) outrank alias expansions */
+    const exact = wbCountAlt(alts[0], hay);
+    let alias = 0;
+    for (let i = 1; i < alts.length && alias < 6; i++) alias += wbCountAlt(alts[i], hay);
+    return exact * 30 + Math.min(alias, 6) * 10;
+  }
+
+  function wbConcepts(q) {
+    /* stopwords drop first, so "tap a belly" pairs up as "tap belly" */
+    const toks = q.toLowerCase().replace(/[^a-z0-9\s/-]/g, ' ').split(/\s+/)
+      .filter(function (t) { return t && !WB_STOP.has(t); });
+    const out = [];
+    for (let i = 0; i < toks.length; i++) {
+      const two = i + 1 < toks.length ? toks[i] + ' ' + toks[i + 1] : null;
+      if (two && WB_ALIAS[two]) { out.push([two].concat(WB_ALIAS[two])); i++; continue; }
+      const t = toks[i];
+      out.push(WB_ALIAS[t] ? [t].concat(WB_ALIAS[t]) : [t]);
+    }
+    return out;
+  }
+
+  function wbTopicFor(page) { /* enclosing top-level topic for a page number */
+    let best = null;
+    for (let i = 0; i < wbTopics.length; i++) {
+      if (wbTopics[i].p <= page) best = wbTopics[i]; else break;
+    }
+    return best;
+  }
+
+  function wbSnippet(pageIdx, alts) {
+    const low = wbLow[pageIdx], txt = wbIndex.text[pageIdx];
+    let best = -1;
+    for (let i = 0; i < alts.length; i++) {
+      const p = low.indexOf(alts[i]);
+      if (p !== -1 && (best === -1 || p < best)) best = p;
+    }
+    if (best === -1) return txt.slice(0, 130) + '…';
+    const start = Math.max(0, best - 55);
+    let s = txt.slice(start, best + 110);
+    if (start > 0) s = '…' + s.replace(/^\S*\s/, '');
+    if (best + 110 < txt.length) s = s.replace(/\s\S*$/, '') + '…';
+    return s;
+  }
+
+  function wbLink(page, term) {
+    return WB_VIEWER + '#page=' + page + (term ? '&search=' + encodeURIComponent(term) : '');
+  }
+
+  function wbGroup(title) {
+    const p = document.createElement('p');
+    p.className = 'toc-title';
+    p.textContent = title;
+    return p;
+  }
+
+  function wbSearch() {
+    const q = $wbq.value.trim();
+    if (!q) { $wbresults.innerHTML = ''; $wbhint.hidden = false; return; }
+    $wbhint.hidden = true;
+    if (wbLoadState !== 2) { wbEnsureIndex(); return; }
+
+    const concepts = wbConcepts(q);
+    if (!concepts.length) { wbStatus('Add a medical term — e.g. “blood pressure”, “hyponatremia”, “paracentesis”.'); return; }
+    const flat = [];
+    concepts.forEach(function (a) { a.forEach(function (t) { if (t.length > 3 && flat.indexOf(t) === -1) flat.push(t); }); });
+
+    /* topics: ≥1 concept in the section title; the rest may match the section's first page */
+    const topicHits = [];
+    wbIndex.outline.forEach(function (o, i) {
+      const hay = wbTopicLow[i];
+      const pageHay = wbLow[o.p - 1] || '';
+      let score = 0, inTitle = 0;
+      for (let c = 0; c < concepts.length; c++) {
+        if (wbMatchConcept(concepts[c], hay)) { score += 150; inTitle++; }
+        else if (wbMatchConcept(concepts[c], pageHay)) score += 40;
+        else { score = 0; break; }
+      }
+      if (score && inTitle) topicHits.push({ o: o, score: score + (o.in ? 0 : 40) });
+    });
+    topicHits.sort(function (a, b) { return b.score - a.score || a.o.p - b.o.p; });
+    const topTopics = topicHits.slice(0, 6);
+    const topicPages = {};
+    topTopics.forEach(function (h) { topicPages[h.o.p] = true; });
+
+    /* pages: every concept must appear on the page; rank by capped term frequency */
+    const pageHits = [];
+    for (let p = 0; p < wbLow.length; p++) {
+      const hay = wbLow[p];
+      let score = 0, primary = null;
+      for (let c = 0; c < concepts.length; c++) {
+        const n = wbConceptScore(concepts[c], hay);
+        if (!n) { score = 0; break; }
+        score += n;
+        if (!primary) primary = wbMatchConcept(concepts[c], hay);
+      }
+      /* skip title/preface/contents pages (before the first section) and pages already shown as sections */
+      if (score && !topicPages[p + 1] && wbTopics.length && p + 1 >= wbTopics[0].p) {
+        pageHits.push({ p: p + 1, score: score, primary: primary });
+      }
+    }
+    pageHits.sort(function (a, b) { return b.score - a.score || a.p - b.p; });
+    const topPages = pageHits.slice(0, 8);
+
+    /* pearls: every concept somewhere in the note */
+    const pearlHits = [];
+    entries.forEach(function (e) {
+      let s = 0;
+      for (let c = 0; c < concepts.length; c++) {
+        const alts = concepts[c];
+        if (wbMatchConcept(alts, e.titleLower)) s += 300;
+        else if (wbMatchConcept(alts, e.keysLower)) s += 150;
+        else if (wbMatchConcept(alts, e.bodyLower)) s += 80;
+        else { s = 0; break; }
+      }
+      if (s) pearlHits.push({ e: e, score: s });
+    });
+    pearlHits.sort(function (a, b) { return b.score - a.score; });
+    const topPearls = pearlHits.slice(0, 5);
+
+    /* render */
+    $wbresults.innerHTML = '';
+    if (!topTopics.length && !topPages.length && !topPearls.length) {
+      wbStatus('Nothing found for “' + q + '” — try a different word for it (or ask NotebookLM below).');
+      return;
+    }
+
+    if (topTopics.length) {
+      $wbresults.appendChild(wbGroup('White Book — sections'));
+      topTopics.forEach(function (h) {
+        const a = document.createElement('a');
+        a.className = 'wbr';
+        a.href = wbLink(h.o.p, null);
+        a.target = '_blank'; a.rel = 'noopener';
+        a.innerHTML =
+          '<span class="wbr-t">' + esc(h.o.t) + (h.o.in ? ' <span class="wbr-in">in ' + esc(h.o.in) + '</span>' : '') + '</span>' +
+          '<span class="wbr-c">' + esc(h.o.c) + ' · p. ' + h.o.p + ' ↗</span>';
+        $wbresults.appendChild(a);
+      });
+    }
+
+    if (topPages.length) {
+      $wbresults.appendChild(wbGroup('White Book — pages'));
+      topPages.forEach(function (h) {
+        const topic = wbTopicFor(h.p);
+        const a = document.createElement('a');
+        a.className = 'wbr';
+        a.href = wbLink(h.p, h.primary);
+        a.target = '_blank'; a.rel = 'noopener';
+        const where = topic ? esc(topic.t) + ' · ' + esc(topic.c) + ' · p. ' + h.p : 'p. ' + h.p;
+        a.innerHTML = '<span class="wbr-t">' + where + ' ↗</span>';
+        const snip = document.createElement('span');
+        snip.className = 'wbr-snip';
+        snip.textContent = wbSnippet(h.p - 1, flat);
+        highlight(snip, flat);
+        a.appendChild(snip);
+        $wbresults.appendChild(a);
+      });
+    }
+
+    if (topPearls.length) {
+      $wbresults.appendChild(wbGroup('From your pearls'));
+      topPearls.forEach(function (h) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'wbr';
+        b.innerHTML =
+          '<span class="wbr-t">' + esc(h.e.meta.title) + '</span>' +
+          '<span class="wbr-c">' + esc(h.e.meta.section) + '</span>';
+        const snip = document.createElement('span');
+        snip.className = 'wbr-snip';
+        snip.textContent = snippetFor(h.e, flat);
+        highlight(snip, flat);
+        b.appendChild(snip);
+        b.addEventListener('click', function () {
+          switchTab('notes');
+          clearJumpHighlight();
+          h.e.card.hidden = false;
+          h.e.card.scrollIntoView({ block: 'start', behavior: 'instant' });
+          highlight(h.e.bodyEl, flat);
+          lastJump = h.e;
+          activeId = h.e.meta.id;
+        });
+        $wbresults.appendChild(b);
+      });
+    }
+  }
+
+  function switchTab(which) {
+    const wb = which === 'wb';
+    document.body.classList.toggle('wbmode', wb);
+    $tabWb.classList.toggle('on', wb);
+    $tabWb.setAttribute('aria-selected', String(wb));
+    $tabNotes.classList.toggle('on', !wb);
+    $tabNotes.setAttribute('aria-selected', String(!wb));
+    $wbview.hidden = !wb;
+    if ($notesview) $notesview.hidden = wb;
+    if ($notesbar) $notesbar.hidden = wb;
+    if (wb) {
+      if (location.hash !== '#wb') history.replaceState(null, '', '#wb');
+      wbEnsureIndex();
+      $wbq.focus();
+    } else if (location.hash === '#wb') {
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+  }
+
+  if ($tabWb && $wbview) {
+    $tabNotes.addEventListener('click', function () { switchTab('notes'); });
+    $tabWb.addEventListener('click', function () { switchTab('wb'); });
+    let wbDebounce = null;
+    $wbq.addEventListener('input', function () {
+      clearTimeout(wbDebounce);
+      wbDebounce = setTimeout(wbSearch, 90);
+    });
+    $wbq.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); wbSearch(); }
+      else if (ev.key === 'Escape') { $wbq.value = ''; wbSearch(); }
+    });
+    if (location.hash === '#wb') switchTab('wb');
+  }
 
   /* ---------- draft preview (#draft=id1,id2 — fragments served from the draft branch) ---------- */
   const DRAFT_BASE = 'https://raw.githubusercontent.com/maxweiss10/pearls/draft/';

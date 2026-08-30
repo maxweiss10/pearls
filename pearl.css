@@ -75,6 +75,49 @@ a:hover{text-decoration:underline; text-underline-offset:2px}
 }
 .wb:hover{background:var(--hover); border-color:var(--gray); text-decoration:none}
 
+/* ---------- tabs ---------- */
+#notesview[hidden],#wbview[hidden],#notesbar[hidden]{display:none !important}
+.tabs{border-bottom:1px solid var(--line); background:var(--page)}
+.tabrow{display:flex; gap:var(--s-4)}
+.tab{
+  font-family:inherit; font-size:var(--t-sm); font-weight:500; color:var(--slate); cursor:pointer;
+  background:none; border:0; border-bottom:2px solid transparent; padding:10px 2px 9px;
+  transition:color var(--tap) ease, border-color var(--tap) ease;
+}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--ink); font-weight:600; border-bottom-color:var(--ink)}
+
+/* ---------- White Book tab ---------- */
+.wbview{max-width:952px; padding-top:var(--s-5); padding-bottom:var(--s-8); min-height:60vh}
+.wb-search #wbq{
+  -webkit-appearance:none; appearance:none; width:100%;
+  font-family:inherit; font-size:var(--t-md); color:var(--ink);
+  background:var(--zebra); border:1px solid var(--line-2); border-radius:8px;
+  padding:12px 14px; outline:none;
+  transition:border-color var(--tap) ease, box-shadow var(--tap) ease, background var(--tap) ease;
+}
+.wb-search #wbq::placeholder{color:var(--slate)}
+.wb-search #wbq:focus{background:var(--page); border-color:var(--link); box-shadow:0 0 0 3px color-mix(in srgb, var(--link) 12%, transparent)}
+.wb-hint{font-size:var(--t-sm); color:var(--gray); margin:var(--s-2) 2px 0}
+.wb-results{margin-top:var(--s-4)}
+.wb-status{font-size:var(--t-sm); color:var(--gray); margin:var(--s-4) 2px}
+.wbr{
+  display:block; width:100%; text-align:left; font-family:inherit; font-size:var(--t-sm);
+  color:var(--ink-2); background:none; border:0; border-bottom:1px solid var(--rowline);
+  padding:10px 2px; cursor:pointer; text-decoration:none;
+}
+.wbr:hover{background:var(--hover); text-decoration:none}
+.wbr-t{display:block; font-weight:600; color:var(--ink)}
+a.wbr .wbr-t{color:var(--link)}
+.wbr-in{font-weight:400; color:var(--gray); font-style:italic}
+.wbr-c{display:block; font-size:var(--t-xs); color:var(--slate); margin-top:1px}
+.wbr-snip{display:block; font-size:var(--t-xs); color:var(--gray); margin-top:3px; line-height:1.5}
+.wbr-snip mark{background:var(--mark); color:var(--mark-ink); padding:0 1px}
+.wb-resources{margin-top:var(--s-7); border-top:1px solid var(--line); padding-top:var(--s-4)}
+.wb-resources p{margin:var(--s-2) 0; font-size:var(--t-sm)}
+.wb-resources .mut{font-style:normal}
+.footlinks{display:flex; gap:var(--s-4)}
+
 /* ---------- search ---------- */
 .searchbar{position:sticky; top:0; z-index:20; background:var(--page); padding:var(--s-2) 0; border-bottom:1px solid var(--line)}
 .searchbar .wrap{position:relative}
@@ -320,7 +363,7 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
 /* ---------- wide ---------- */
 @media (min-width:1180px){
   .tocm{display:none}
-  .top.wrap,.searchbar .wrap,.layout.wrap{max-width:1240px}
+  .top.wrap,.searchbar .wrap,.layout.wrap,.tabs .wrap{max-width:1240px}
   .searchbar .sbrow,.searchbar .chips{max-width:920px; margin-left:288px}
   .pal{left:288px; right:0; max-width:920px}
   .layout{display:grid; grid-template-columns:256px minmax(0,920px); gap:var(--s-6); align-items:start}
@@ -329,13 +372,14 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
 }
 
 @media print{
-  .searchbar,.foot,.toc,.tocm,#keys,.draftbar{display:none}
+  .searchbar,.foot,.toc,.tocm,#keys,.draftbar,.tabs{display:none}
   .card{break-inside:avoid}
   body{background:#fff}
 }
 
 /* ---------- draft preview mode (#draft=…) ---------- */
 body.drafting .searchbar,
+body.drafting .tabs,
 body.drafting .toc{display:none}
 body.drafting .layout{display:block; max-width:952px}
 body.drafting .top.wrap,
