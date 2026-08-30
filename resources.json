@@ -34,5 +34,11 @@
     "url": "https://ucsf.app.box.com/s/qnesx6q4jz6wxcjxik2cobqvueoh0fdc",
     "desc": "Shared UCSF Box folder (MyAccess login required).",
     "icon": "📦"
+  },
+  {
+    "title": "BP Treatment Efficacy Calculator",
+    "url": "https://www.bpmodel.org/blood-pressure-treatment-efficacy-calculator/",
+    "desc": "Predicted BP lowering from antihypertensive regimens (George Institute).",
+    "icon": "💊"
   }
 ]
