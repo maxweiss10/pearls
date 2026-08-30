@@ -320,7 +320,7 @@ async function toolResources(env, a) {
     if (!title || !/^https?:\/\//.test(url)) throw new Error('add needs a title and an http(s) url');
     const dup = list.find((r) => norm(r.title) === norm(title) || r.url === url);
     if (dup) throw new Error(`"${dup.title}" already has that title or url — use action "edit" to change it`);
-    list.push({ title, url, desc: String(a.desc || '').trim() });
+    list.push({ title, url, desc: String(a.desc || '').trim(), icon: String(a.icon || '').trim() || '🔗' });
     message = `Pearl: resource — ${title}`;
   } else if (action === 'edit' || action === 'remove') {
     const i = list.findIndex((r) => norm(r.title) === norm(a.match_title));
@@ -334,6 +334,7 @@ async function toolResources(env, a) {
       if (a.title !== undefined) list[i].title = String(a.title).trim();
       if (a.url !== undefined) list[i].url = String(a.url).trim();
       if (a.desc !== undefined) list[i].desc = String(a.desc).trim();
+      if (a.icon !== undefined) list[i].icon = String(a.icon).trim();
       title = list[i].title;
       message = `Pearl: edit resource — ${title}`;
     }
@@ -425,7 +426,7 @@ const TOOLS = [
   },
   {
     name: 'edit_resources',
-    description: 'Add, edit, or remove a link row on the site\'s Resources tab (resources.json — {title, url, desc} rows). A resource is a LINK, not a study note: "add X to my resources" means this tool, never stage_pearl. Goes straight to main with no draft or preview (a link row is instantly git-revertable), so for add/edit just restate the row in one line afterward. For remove, name the row to Max and get his explicit yes BEFORE calling. pearl_status lists the current rows.',
+    description: 'Add, edit, or remove a link row on the site\'s Resources tab (resources.json — {title, url, desc, icon} rows). A resource is a LINK, not a study note: "add X to my resources" means this tool, never stage_pearl. Goes straight to main with no draft or preview (a link row is instantly git-revertable), so for add/edit just restate the row in one line afterward. For remove, name the row to Max and get his explicit yes BEFORE calling. pearl_status lists the current rows.',
     inputSchema: {
       type: 'object',
       required: ['action'],
@@ -434,6 +435,7 @@ const TOOLS = [
         title: { type: 'string', description: 'add: display name; edit: pass to retitle' },
         url: { type: 'string', description: 'http(s) link (required for add)' },
         desc: { type: 'string', description: 'one short line shown under the title; note a login gate if any ("MyAccess login")' },
+        icon: { type: 'string', description: 'one emoji that fits the resource, shown next to the link (📦 Box, 📅 calendar, 📖 manual…) — always pick one on add' },
         match_title: { type: 'string', description: 'edit/remove: title of the existing row (case-insensitive)' },
       },
     },

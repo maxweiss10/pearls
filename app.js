@@ -1132,13 +1132,16 @@
         data.forEach(function (d) {
           const res = d.res;
           const a = document.createElement('a');
-          a.className = 'wbr';
+          a.className = 'wbr res-row';
           a.href = res.url;
           a.target = '_blank'; a.rel = 'noopener';
           a.innerHTML =
-            '<span class="wbr-t">' + esc(res.title) + ' ↗</span>' +
-            '<span class="wbr-c">' + esc(res.url.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</span>' +
-            (res.desc ? '<span class="wbr-snip">' + esc(res.desc) + '</span>' : '');
+            '<span class="res-ico" aria-hidden="true">' + esc(res.icon || '🔗') + '</span>' +
+            '<span class="res-body">' +
+              '<span class="wbr-t">' + esc(res.title) + ' ↗</span>' +
+              '<span class="wbr-c">' + esc(res.url.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</span>' +
+              (res.desc ? '<span class="wbr-snip">' + esc(res.desc) + '</span>' : '') +
+            '</span>';
           $reslist.appendChild(a);
         });
       })

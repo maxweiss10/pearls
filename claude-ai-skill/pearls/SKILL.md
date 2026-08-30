@@ -69,7 +69,7 @@ If web fetch is unavailable, proceed with the fallback section list in §2 and s
 
 ## 1a · Resources tab — link rows, not entries
 
-The site's Resources tab is a flat list of links (`resources.json`: `{title, url, desc}`). "Add X to my resources" NEVER becomes a pearl entry — no id, no section, no fragment, no draft.
+The site's Resources tab is a flat list of links (`resources.json`: `{title, url, desc, icon}`). "Add X to my resources" NEVER becomes a pearl entry — no id, no section, no fragment, no draft. Every row gets an `icon`: one emoji that fits the resource (📦 Box, 📅 calendar, 📖 manual, 🫀 CVD calculator…), shown next to the link — always pick one when adding.
 
 - **Lane 1**: `edit_resources` (action `add` / `edit` / `remove`). It commits straight to main — no preview, because a link row is instantly git-revertable — so for adds and edits just restate the row in one line afterward: *"Added **UCSF Box** to Resources (MyAccess login) — live in ~1 min."* `remove` still needs his explicit yes first, naming the row. Current rows come back from `pearl_status`.
 - **Lane 2** (connector unavailable): build the exact JSON row, then hand him `https://github.com/maxweiss10/pearls/edit/main/resources.json` with one line of paste instructions (comma after the previous `}`, new row before the closing `]`).

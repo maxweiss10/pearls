@@ -2,31 +2,37 @@
   {
     "title": "Intern Year Schedule",
     "url": "https://maxweiss10.github.io/intern-year-schedule/",
-    "desc": "Rotation calendar — also lives in the Schedule tab."
+    "desc": "Rotation calendar — also lives in the Schedule tab.",
+    "icon": "📅"
   },
   {
     "title": "The White Book",
     "url": "https://maxweiss10.github.io/whitebook/pdfjs/web/viewer.html?file=../../whitebook.pdf",
-    "desc": "MGH housestaff manual, full PDF viewer — plain-language searchable in the Search tab."
+    "desc": "MGH housestaff manual, full PDF viewer — plain-language searchable in the Search tab.",
+    "icon": "📖"
   },
   {
     "title": "PREVENT Calculator",
     "url": "https://maxweiss10.github.io/prevent-calculator/",
-    "desc": "10- and 30-year CVD risk with 2026 dyslipidemia guideline recommendations (.PREVENT dotphrase companion)."
+    "desc": "10- and 30-year CVD risk with 2026 dyslipidemia guideline recommendations (.PREVENT dotphrase companion).",
+    "icon": "🫀"
   },
   {
     "title": "UCSF Rotations NotebookLM",
     "url": "https://notebook.google.com/notebook/9ac9528e-9fa1-4992-8ea4-4723ef10b30b?authuser=0&pageId=none",
-    "desc": "AI Q&A notebook about UCSF rotations (separate from the White Book)."
+    "desc": "AI Q&A notebook about UCSF rotations (separate from the White Book).",
+    "icon": "🤖"
   },
   {
     "title": "Legacy notes archive",
     "url": "https://docs.google.com/document/d/1N8egmcK1GHmA6VPiwi2uGR71VcNt8Ve-M-tMkczFMjc/edit",
-    "desc": "The old Google Doc study notes, frozen as an archive."
+    "desc": "The old Google Doc study notes, frozen as an archive.",
+    "icon": "🗄️"
   },
   {
     "title": "UCSF Box",
     "url": "https://ucsf.app.box.com/s/qnesx6q4jz6wxcjxik2cobqvueoh0fdc",
-    "desc": "Shared UCSF Box folder (MyAccess login required)."
+    "desc": "Shared UCSF Box folder (MyAccess login required).",
+    "icon": "📦"
   }
 ]
