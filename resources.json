@@ -46,5 +46,11 @@
     "url": "https://maxweiss10.github.io/bp-atlas/",
     "desc": "Every antihypertensive at every dose you'd actually order, ranked by BP drop with monthly cost and key adverse effects — plus a combination builder and guidance on which classes to pair.",
     "icon": "📉"
+  },
+  {
+    "title": "Remote CPRS Login Guide",
+    "url": "https://maxweiss10.github.io/cprs-login-guide/",
+    "desc": "VA card reader + Citrix workflow, start to finish — log in every 30 days or remote access deactivates.",
+    "icon": "🪪"
   }
 ]
