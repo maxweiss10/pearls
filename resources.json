@@ -44,7 +44,7 @@
   {
     "title": "Antihypertensive Potency Atlas",
     "url": "https://maxweiss10.github.io/bp-atlas/",
-    "desc": "Every antihypertensive at every dose you'd actually order, ranked by BP drop with monthly cost and key adverse effects.",
+    "desc": "Every antihypertensive at every dose you'd actually order, ranked by BP drop with monthly cost and key adverse effects — plus a combination builder and guidance on which classes to pair.",
     "icon": "📉"
   }
 ]
