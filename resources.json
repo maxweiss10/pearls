@@ -52,5 +52,11 @@
     "url": "https://maxweiss10.github.io/cprs-login-guide/",
     "desc": "VA card reader + Citrix workflow, start to finish — log in every 30 days or remote access deactivates.",
     "icon": "🪪"
+  },
+  {
+    "title": "Antihyperglycemic Atlas",
+    "url": "https://maxweiss10.github.io/t2d-atlas/",
+    "desc": "Which glucose-lowering drug is next for this patient — ranked by indication rather than potency, with a contraindication gate, ADA 2026 recommendations, FDA label status, and real prices by channel.",
+    "icon": "🩸"
   }
 ]
