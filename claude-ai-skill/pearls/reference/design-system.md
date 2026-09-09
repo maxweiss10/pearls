@@ -21,7 +21,7 @@ The site stylesheet (`pearl.css`) supplies all styling. Fragments are semantic m
 So the eye can drop straight down a column:
 
 - drug/lead name in `<b>` · attributes plain or `.mut`/`.mech` · dose in `.dose` (tabular figures, units verbatim) · **cautions LAST, in `.warn`**
-- **ordered items:** markers as `<b class="mk">1.</b>` / `<b class="mk">A.</b>` at text size — the site hangs them in a left gutter so wrapped lines align under the text, never under the marker
+- **ordered items:** markers as `<b class="mk">1.</b>` / `<b class="mk">A.</b>` at text size, placed inside a `.row2` cell or a `.strip` line — the site hangs them in a left gutter so wrapped lines align under the text, never under the marker
 - **separator convention:** lead **—** details, with `·` between items inside the details
   `<b>Norepinephrine</b> <span class="brand">(Levophed)</span> — α &gt; β`
   Use the em dash everywhere a lead meets its detail. Never a colon.

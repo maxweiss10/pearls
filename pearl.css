@@ -199,7 +199,7 @@ mark{background:var(--mark); color:var(--mark-ink); padding:0 1px; border-radius
 .mut,.mech{color:var(--gray); font-style:italic}
 .note{font-size:var(--t-xs); font-style:italic; color:var(--gray); margin:0 0 var(--s-3); line-height:1.55}
 .brand,.body .brand{font-weight:400; color:var(--gray); font-size:.94em; font-style:normal}
-.strip{margin:0 0 6px; line-height:1.55; max-width:80ch}
+.strip{position:relative; margin:0 0 6px; line-height:1.55; max-width:80ch}
 .ptext{margin:0 0 var(--s-2); line-height:1.65; max-width:76ch}
 .ptext:last-child{margin-bottom:0}
 .dose{font-size:var(--t-base); font-weight:600; color:var(--ink); white-space:nowrap; letter-spacing:-.01em}
@@ -252,6 +252,7 @@ td.cell-avoid{background:none !important}
 .row2 > div{position:relative}
 .row2 > div:has(> .mk){padding-left:var(--s-6)}
 .mk{position:absolute; left:0; top:0; font-weight:600; color:var(--ink)}
+.strip:has(> .mk){padding-left:var(--s-6)} /* numbered .strip lines hang their marker in the gutter like .row2 cells */
 .row2.rule > div:last-child:has(> .mk){padding-left:calc(var(--s-6) + var(--s-4))}
 .row2.rule > div:last-child .mk{left:var(--s-4)}
 
