@@ -3,33 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pearl — residency home base</title>
-<meta name="description" content="Pearl — a fast, searchable clinical reference of residency study notes: pressors, sedation, antibiotics, effusions, exams, and ward essentials.">
-<meta property="og:title" content="Pearl — residency home base">
+<title>Pearls — residency home base</title>
+<meta name="description" content="Pearls — a fast, searchable clinical reference of residency study notes: pressors, sedation, antibiotics, effusions, exams, and ward essentials.">
+<meta property="og:title" content="Pearls — residency home base">
 <meta property="og:description" content="A fast, searchable clinical reference of residency study notes.">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Pearl">
+<meta name="apple-mobile-web-app-title" content="Pearls">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a3a5c'/><circle cx='50' cy='54' r='26' fill='%23ffffff'/><circle cx='42' cy='46' r='9' fill='%23dfe6ee'/></svg>">
 <link rel="preload" href="fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-Medium.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/IBMPlexSans-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="pearl.css?v=hb5">
+<link rel="stylesheet" href="pearl.css?v=hb6">
 </head>
 <body>
 <header class="top wrap">
   <div class="brand">
     <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#1a3a5c"/><circle cx="50" cy="54" r="26" fill="#fff"/><circle cx="42" cy="46" r="9" fill="#dfe6ee"/></svg>
-    <h1>Pearl</h1>
+    <h1><a class="home" href="https://maxweiss10.github.io/pearls/">Pearls</a></h1>
     <span class="sub">residency home base</span>
   </div>
   <div class="right">
     <span class="count" id="count"></span>
-    <a class="wb" href="https://maxweiss10.github.io/whitebook" target="_blank" rel="noopener">White Book ↗</a>
+    <a class="hbtn sched" href="https://maxweiss10.github.io/intern-year-schedule/" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.8h11M5.5 2v2.6M10.5 2v2.6"/></svg>Schedule ↗</a>
+    <a class="hbtn wb" href="https://maxweiss10.github.io/whitebook" target="_blank" rel="noopener">White Book ↗</a>
   </div>
 </header>
 
@@ -39,8 +40,6 @@
       <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="8" cy="8.5" r="4.6"/><circle cx="6.4" cy="7" r="1.1" fill="currentColor" stroke="none"/></svg>Pearls</button>
     <button id="tab-resources" class="tab" type="button" role="tab" aria-selected="false">
       <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><rect x="2.5" y="2.5" width="4.7" height="4.7" rx="1.2"/><rect x="8.8" y="2.5" width="4.7" height="4.7" rx="1.2"/><rect x="2.5" y="8.8" width="4.7" height="4.7" rx="1.2"/><rect x="8.8" y="8.8" width="4.7" height="4.7" rx="1.2"/></svg>Resources</button>
-    <button id="tab-schedule" class="tab" type="button" role="tab" aria-selected="false">
-      <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5"/><path d="M2.5 6.8h11M5.5 2v2.6M10.5 2v2.6"/></svg>Schedule</button>
   </div>
 </nav>
 
@@ -67,11 +66,6 @@
   <div id="wbresults" class="wb-results" aria-live="polite"></div>
 </div>
 
-<div class="schedview" id="schedview" hidden>
-  <p class="viewbar wrap">Embedded live from <a href="https://maxweiss10.github.io/intern-year-schedule/" target="_blank" rel="noopener">intern-year-schedule ↗</a> — same site, nothing moved.</p>
-  <iframe id="schedframe" title="Intern year schedule"></iframe>
-</div>
-
 <div class="wrap resview" id="resview" hidden>
   <p class="toc-title">Residency resources</p>
   <div id="reslist"><p class="wb-status">Loading…</p></div>
@@ -96,6 +90,6 @@
   </div>
 </dialog>
 
-<script src="app.js?v=hb5"></script>
+<script src="app.js?v=hb6"></script>
 </body>
 </html>

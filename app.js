@@ -903,16 +903,12 @@
     }
   }
 
-  /* ---------- home-base tabs (Pearls · Resources · Schedule) ---------- */
-  const SCHED_URL = 'https://maxweiss10.github.io/intern-year-schedule/';
-  const $schedview = document.getElementById('schedview');
-  const $schedframe = document.getElementById('schedframe');
+  /* ---------- home-base tabs (Pearls · Resources) — Schedule is a header button now ---------- */
   const $resview = document.getElementById('resview');
   const $reslist = document.getElementById('reslist');
 
   const TABS = {
     notes: { btn: $tabNotes, views: [$notesview, $notesbar], hash: '' },
-    schedule: { btn: document.getElementById('tab-schedule'), views: [$schedview], hash: '#schedule' },
     resources: { btn: document.getElementById('tab-resources'), views: [$resview], hash: '#resources' }
   };
 
@@ -970,8 +966,7 @@
     const hash = TABS[which].hash;
     if (hash && location.hash !== hash) history.replaceState(null, '', hash);
     else if (!hash && /^#(wb|schedule|resources)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
-    if (which === 'schedule' && $schedframe && !$schedframe.src) $schedframe.src = SCHED_URL;
-    else if (which === 'resources') renderResourcesTab();
+    if (which === 'resources') renderResourcesTab();
     syncSearch();
   }
 
@@ -995,8 +990,11 @@
     if (ev.key === 'Enter') { ev.preventDefault(); wbSearch(); }
     else if (ev.key === 'Escape') { ev.stopPropagation(); $wbq.value = ''; wbSearch(); $wbq.blur(); }
   });
-  const tabHash = location.hash.match(/^#(schedule|resources)$/);
+  const tabHash = location.hash.match(/^#(resources)$/);
   if (tabHash) switchTab(tabHash[1]);
+  else if (location.hash === '#schedule') { /* legacy Schedule-tab links land on Pearls; the button is in the header */
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   else if (location.hash === '#wb') { /* legacy Search-tab links land on the unified bar */
     history.replaceState(null, '', location.pathname + location.search);
     $wbq.focus();
