@@ -397,6 +397,12 @@
   if ($keys) {
     $keys.addEventListener('click', function (ev) { if (ev.target === $keys) $keys.close(); });
   }
+  /* ---------- brand link: when the site is embedded (e.g. the Google Sites wrapper used to get past
+     Epic's link allowlist) the wrapper's sandbox forbids navigating the top window, but a popup may
+     escape it — so open the real site in a new tab. Top-level, the link simply reloads the live home. */
+  const $home = document.querySelector('.brand h1 a');
+  if ($home && window.self !== window.top) { $home.target = '_blank'; $home.rel = 'noopener'; }
+
   /* ---------- unified search (White Book sections + pages, pearls, resources) ---------- */
   const WB_VIEWER = 'https://maxweiss10.github.io/whitebook/pdfjs/web/viewer.html?file=../../whitebook.pdf';
   const $tabNotes = document.getElementById('tab-notes');
