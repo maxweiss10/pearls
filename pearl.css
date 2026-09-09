@@ -119,6 +119,7 @@ a.wbr .wbr-t{color:var(--link)}
 .res-hint{font-size:var(--t-xs); color:var(--slate); margin-top:var(--s-5)}
 .res-row{display:flex; gap:12px; align-items:flex-start}
 .res-ico{flex:none; width:30px; font-size:21px; line-height:1.3; text-align:center; margin-top:2px}
+.res-ico img{display:block; width:26px; height:26px; margin:1px auto 0}
 .res-body{flex:1; min-width:0}
 
 /* ---------- search ---------- */

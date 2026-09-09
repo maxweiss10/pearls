@@ -932,6 +932,30 @@
     }
     return resPromise;
   }
+  /* Resource icons are drawn from bundled Noto Emoji SVGs (icons/emoji/) so they render identically on
+     every OS — hospital Windows builds lack the newer glyphs entirely and draw the rest with different
+     artwork. Fallback chain: bundled file → jsDelivr copy of Noto → the plain character. */
+  const EMOJI_CDN = 'https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/svg/';
+  function emojiFile(str) {
+    const cps = [];
+    for (const ch of String(str)) { const cp = ch.codePointAt(0); if (cp !== 0xFE0F) cps.push(cp.toString(16)); }
+    return cps.length ? 'emoji_u' + cps.join('_') + '.svg' : '';
+  }
+  function iconHTML(icon) {
+    const file = emojiFile(icon);
+    return '<span class="res-ico" aria-hidden="true">' +
+      (file ? '<img src="icons/emoji/' + file + '" alt="" data-cdn="' + EMOJI_CDN + file + '" data-txt="' + esc(icon) + '">' : esc(icon)) +
+      '</span>';
+  }
+  function wireIcon(row) {
+    const img = row.querySelector('.res-ico img');
+    if (!img) return;
+    img.onerror = function () {
+      const cdn = img.dataset.cdn;
+      if (cdn) { delete img.dataset.cdn; img.src = cdn; }
+      else img.parentNode.textContent = img.dataset.txt;
+    };
+  }
   function renderResourcesTab() {
     ensureResources()
       .then(function (data) {
@@ -945,13 +969,14 @@
           a.href = res.url;
           a.target = '_blank'; a.rel = 'noopener';
           a.innerHTML =
-            '<span class="res-ico" aria-hidden="true">' + esc(res.icon || '🔗') + '</span>' +
+            iconHTML(res.icon || '🔗') +
             '<span class="res-body">' +
               '<span class="wbr-t">' + esc(res.title) + ' ↗</span>' +
               '<span class="wbr-c">' + esc(res.url.replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</span>' +
               (res.desc ? '<span class="wbr-snip">' + esc(res.desc) + '</span>' : '') +
             '</span>';
           $reslist.appendChild(a);
+          wireIcon(a);
         });
       })
       .catch(function () {
