@@ -10,9 +10,17 @@
     "MSK & Sports",
     "Inpatient Essentials",
     "GI & Hepatology",
-    "Papers"
+    "Papers",
+    "Renal &amp; Electrolytes"
   ],
   "entries": [
+    {
+      "id": "2026-09-16-electrolyte-repletion",
+      "title": "Electrolyte Repletion",
+      "date": "2026-09-16",
+      "section": "Renal &amp; Electrolytes",
+      "keywords": "potassium, hypokalemia, kcl, magnesium, hypomagnesemia, magnesium sulfate, magnesium oxide, phosphorus, hypophosphatemia, phos-nak, k-phos, calcium, hypocalcemia, calcium gluconate, calcium chloride, electrolyte repletion, lytes, white book, note"
+    },
     {
       "id": "2026-08-30-hf-meds-ef",
       "title": "HF Medications by EF",
