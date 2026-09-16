@@ -11,9 +11,17 @@
     "Inpatient Essentials",
     "GI & Hepatology",
     "Papers",
-    "Renal &amp; Electrolytes"
+    "Renal &amp; Electrolytes",
+    "Cross-Cover &amp; Acute Care"
   ],
   "entries": [
+    {
+      "id": "2026-09-16-opioid-pruritus",
+      "title": "Opioid Pruritus on Night Float",
+      "date": "2026-09-16",
+      "section": "Cross-Cover &amp; Acute Care",
+      "keywords": "opioid, pruritus, itching, nalbuphine, nubain, naloxone, ondansetron, zofran, diphenhydramine, benadryl, opioid rotation, morphine, hydromorphone, cross-cover, night float, sickle cell, note"
+    },
     {
       "id": "2026-09-16-electrolyte-repletion",
       "title": "Electrolyte Repletion",
