@@ -15,6 +15,9 @@
   --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px;
   --s-7:48px; --s-8:64px; --s-9:80px; --s-10:96px;
   --radius:6px; --tap:130ms;
+  /* width per form (SKILL.md 4.7) — one cap for everything is what made a
+     4-column GDMT table and a 4-line mnemonic render at the same measure */
+  --w-text:72ch; --w-scan:880px; --w-wide:1100px;
 
   --page:#ffffff; --ink:#171A1F; --ink-2:#333940; --gray:#5C6672;
   --slate:#66748A;
@@ -33,16 +36,19 @@
   --c-inv:#2F5C8F; --c-proc:#5B4A9E; --c-gen:#5C6672;
   --shadowc:rgba(10,15,20,.12);
 }
-/* specialty accents (light) */
-.sechead[data-sec="cross-cover-acute-care"]{--sec-accent:#5A6472}
-.sechead[data-sec="critical-care"]{--sec-accent:#95403A}
-.sechead[data-sec="cardiology"]{--sec-accent:#7E2E4B}
-.sechead[data-sec="pulmonology"]{--sec-accent:#2F5C8F}
-.sechead[data-sec="renal-electrolytes"]{--sec-accent:#1F6B6B}
-.sechead[data-sec="infectious-diseases"]{--sec-accent:#2C6B45}
-.sechead[data-sec="endocrine-obesity"]{--sec-accent:#5B4A9E}
-.sechead[data-sec="msk-sports"]{--sec-accent:#95591F}
-.sechead[data-sec="inpatient-essentials"]{--sec-accent:#4A5568}
+/* specialty accents (light) — carried by BOTH the section header and the card,
+   so the 2px card edge can show discipline while scrolling (SKILL.md 4.5) */
+.sechead[data-sec="cross-cover-acute-care"],.card[data-sec="cross-cover-acute-care"]{--sec-accent:#5A6472}
+.sechead[data-sec="critical-care"],.card[data-sec="critical-care"]{--sec-accent:#95403A}
+.sechead[data-sec="cardiology"],.card[data-sec="cardiology"]{--sec-accent:#7E2E4B}
+.sechead[data-sec="pulmonology"],.card[data-sec="pulmonology"]{--sec-accent:#2F5C8F}
+.sechead[data-sec="renal-electrolytes"],.card[data-sec="renal-electrolytes"]{--sec-accent:#1F6B6B}
+.sechead[data-sec="infectious-diseases"],.card[data-sec="infectious-diseases"]{--sec-accent:#2C6B45}
+.sechead[data-sec="endocrine-obesity"],.card[data-sec="endocrine-obesity"]{--sec-accent:#5B4A9E}
+.sechead[data-sec="msk-sports"],.card[data-sec="msk-sports"]{--sec-accent:#95591F}
+.sechead[data-sec="inpatient-essentials"],.card[data-sec="inpatient-essentials"]{--sec-accent:#4A5568}
+.sechead[data-sec="gi-hepatology"],.card[data-sec="gi-hepatology"]{--sec-accent:#7A5230}
+.sechead[data-sec="papers"],.card[data-sec="papers"]{--sec-accent:#4A5568}
 
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -174,7 +180,11 @@ a.wbr .wbr-t{color:var(--link)}
 .dot{display:none}
 
 /* ---------- notes ---------- */
-.card{background:transparent; border:0; box-shadow:none; padding:0; margin:0 0 var(--s-7); scroll-margin-top:92px}
+.card{position:relative; background:transparent; border:0; box-shadow:none; padding:0; margin:0 0 var(--s-7); scroll-margin-top:92px}
+/* discipline visible while scrolling. Never the only carrier — the section
+   header names it and the meta line repeats it, so this is redundant by design. */
+.card::before{content:""; position:absolute; left:calc(-1 * var(--s-4)); top:5px; bottom:var(--s-6); width:2px; background:var(--sec-accent); opacity:.85}
+.card:last-of-type::before{bottom:0}
 .card:last-of-type{margin-bottom:var(--s-7)}
 .card::after{content:""; display:block; width:48px; height:2px; background:var(--rule); margin-top:var(--s-6)}
 .card:last-of-type::after{display:none}
@@ -195,8 +205,10 @@ mark{background:var(--mark); color:var(--mark-ink); padding:0 1px; border-radius
 /* ---------- entry body ---------- */
 .body{font-size:var(--t-sm)}
 .pearl{color:inherit}
-.sec{display:block; font-size:var(--t-base); font-weight:600; color:var(--ink); letter-spacing:-.01em; margin:0 0 var(--s-2)}
-.sec.later{margin-top:var(--s-5)}
+/* mid-level landmark: was --t-base with no rule, i.e. a bold line among bold
+   lines. Weight+size+rule+air so sections survive the squint test. */
+.sec{display:block; font-size:var(--t-md); font-weight:600; color:var(--ink); letter-spacing:-.012em; margin:0 0 var(--s-2); scroll-margin-top:96px}
+.sec.later{margin-top:var(--s-6); padding-top:var(--s-3); border-top:1px solid var(--line-2)}
 .caps,.eyebrow{font-size:var(--t-xs); font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--slate)}
 .lab{font-weight:600; color:var(--ink)}
 .mut,.mech{color:var(--gray); font-style:italic}
@@ -259,6 +271,137 @@ td.cell-avoid{background:none !important}
 .row2.rule > div:last-child:has(> .mk){padding-left:calc(var(--s-6) + var(--s-4))}
 .row2.rule > div:last-child .mk{left:var(--s-4)}
 
+/* ---------- separator grammar primitives (SKILL.md 4.2–4.4) ----------
+   Each of these exists to take one job away from the middot. Position, rules
+   and slots do the separating; no line needs more than two marks. */
+
+/* .peers — 3+ peer alternatives. Never run in on one line: a real grid, so the
+   eye drops down a column instead of parsing 6 identical dots. */
+.peers{display:grid; grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));
+  gap:var(--s-1) var(--s-5); margin:var(--s-1) 0 var(--s-2)}
+/* column position alone separates the peers. A left rule on every cell reads as
+   a stray indent on the first column, and auto-fit can't target column 1. */
+.peers > span{padding:1px 0; line-height:1.4}
+.peers.tight{grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))}
+.peers.wide{grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))}
+.peers + .lab,.acts + .lab{display:block; margin-top:var(--s-2)}
+
+/* .acts — ordered or unordered actions, one per line. For anything the reader
+   DOES, where a grid would imply they are interchangeable. */
+.acts{margin:var(--s-1) 0 var(--s-2)}
+.acts > div{padding:2px 0; border-bottom:1px solid var(--line); line-height:1.45}
+.acts > div:last-child{border-bottom:0}
+
+/* .slots — a hanging term column with the SAME labelled slots on every row.
+   Replaces <br>-stacking four different kinds of fact inside one cell. */
+.slots{display:grid; grid-template-columns:minmax(4.5rem,max-content) minmax(0,1fr);
+  gap:1px var(--s-4); align-items:baseline; margin:var(--s-1) 0 var(--s-2)}
+.slots > .sk{font-size:var(--t-xs); font-weight:600; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--slate); padding-top:2px}
+.slots > .sv{line-height:1.45; padding-bottom:2px}
+
+/* .branch — a two-branch decision, condition and action aligned across rows.
+   display:contents lets every branch share the parent grid's columns. */
+.branch{display:grid; grid-template-columns:max-content max-content minmax(0,1fr);
+  gap:var(--s-1) var(--s-2); align-items:baseline; margin:var(--s-1) 0 var(--s-2)}
+.br{display:contents}
+.branch .cond{font-weight:600; color:var(--ink)}
+.branch .arr{color:var(--gray)}
+.sub{margin:var(--s-2) 0 0; line-height:1.5}
+
+/* .fn / .notes — a trailing caveat or a parenthetical panel leaves the row.
+   The &#8201; in the marker is load-bearing: app.js indexes textContent with no
+   inter-element whitespace, so "TOF<sup>2</sup>" would index as "tof2" and the
+   <=4-character query "TOF" would stop matching. */
+.fn{font-size:.68em; font-weight:600; vertical-align:.5em; line-height:0; color:var(--gray); white-space:nowrap}
+a .fn{color:inherit}
+.notes{margin:var(--s-2) 0 var(--s-3); padding-left:var(--s-5); font-size:var(--t-xs);
+  color:var(--gray); line-height:1.5; max-width:72ch}
+.notes li{margin-bottom:2px}
+.notes li::marker{color:var(--slate); font-weight:600}
+
+/* .aside — the structural home for .mut parentheticals and .mech mechanisms.
+   Inline under its own line by default; true right margin only where there is
+   room for it (see the wide block). */
+.aside{display:block; font-size:var(--t-xs); font-style:italic; color:var(--gray);
+  line-height:1.45; margin:1px 0 2px}
+
+/* .nil — a null value, never a dash. The word is written in the HTML, not in a
+   CSS ::before, so the search index still sees it. */
+.nil{color:var(--mut2); font-style:italic; font-size:.92em}
+
+/* .cite — citation fields separated by spacing and weight, not by four middots */
+.cite{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px var(--s-4);
+  font-size:var(--t-xs); color:var(--slate); margin:0 0 var(--s-3)}
+.cite .au{font-weight:600; color:var(--ink-2)}
+.cite .jr{font-style:italic}
+
+/* .figcap — LITFL-style teaching caption. A DIFFERENT text from the alt
+   attribute: alt linearizes for the index, this one is written to be read. */
+.figcap{font-size:var(--t-xs); color:var(--gray); line-height:1.55; margin:0 0 var(--s-4); max-width:72ch}
+.figcap b{display:block; font-size:var(--t-sm); color:var(--ink); margin-bottom:3px}
+.figcap ol{margin:3px 0 0; padding-left:var(--s-5)}
+.figcap li{margin-bottom:2px}
+
+/* .drow — promoted out of wm-dotphrases' scoped <style> into a real primitive */
+.drow{display:grid; grid-template-columns:minmax(190px,max-content) minmax(0,1fr);
+  gap:2px var(--s-4); padding:4px 0; border-bottom:1px solid var(--line); align-items:baseline}
+.drow:last-of-type{border-bottom:0}
+
+/* promoted out of pleural-effusion's scoped <style> */
+.fnote{font-size:var(--t-xs); color:var(--gray); margin:0 0 var(--s-3); line-height:1.5}
+.legend{display:flex; flex-wrap:wrap; gap:5px var(--s-4); align-items:center;
+  margin-top:var(--s-3); font-size:var(--t-xs); color:var(--gray)}
+.legend .sw{display:inline-block; width:11px; height:11px; border-radius:3px;
+  border:1px solid; vertical-align:-1px; margin-right:5px}
+
+/* ---------- the eight forms (SKILL.md 4.1) ----------
+   Each declares its own gutter, numbering and rule weight so two entries of
+   different forms are distinguishable at a squint. */
+.pearl{max-width:var(--w-scan)}
+.pearl.form-matrix,.pearl.form-branch,.pearl.form-directory{max-width:var(--w-wide)}
+.pearl.form-takeaway{max-width:var(--w-text)}
+
+/* ladder — a continuous spine down the left gutter; you are meant to read it
+   top to bottom because step n+1 is what you do when n fails */
+.form-ladder .steps{position:relative; padding-left:var(--s-3)}
+.form-ladder .steps::before{content:""; position:absolute; left:3px; top:10px; bottom:10px;
+  border-left:1.5px solid var(--rule)}
+.form-ladder .steps .row2 > div:first-child{padding-left:var(--s-5)}
+.form-ladder .steps .mk{left:0; color:var(--ink)}
+
+/* stage — discrete bands, each with its own small-caps label. No spine: the
+   stages are places you stand, not rungs, and an axis may repeat. */
+.form-stage .band{border-top:2px solid var(--line-2); padding:var(--s-3) 0 var(--s-2); margin:0 0 var(--s-2)}
+.form-stage .band:first-of-type{border-top-width:2px}
+.form-stage .band > .caps{display:block; margin-bottom:var(--s-2); color:var(--ink)}
+.form-stage .band .row2{border-bottom:0; padding-left:0; padding-right:0}
+.form-stage .bandnote{font-size:var(--t-xs); font-style:italic; color:var(--gray); margin-top:var(--s-1)}
+
+/* slots — the hanging term column IS the signature; no bands, no spine */
+.form-slots .term{display:grid; grid-template-columns:minmax(8rem,max-content) minmax(0,1fr);
+  gap:var(--s-1) var(--s-4); padding:var(--s-2) 0; border-bottom:1px solid var(--line-2); align-items:start}
+.form-slots .term:last-of-type{border-bottom:0}
+.form-slots .tn{font-weight:600; color:var(--ink); line-height:1.4}
+
+/* mnemonic — very few rows, large type, heavy whitespace. A short entry must
+   not look padded, so the type does the work instead of the spacing. */
+.form-mnemonic .row2{font-size:var(--t-lg); padding:var(--s-3) var(--s-2); line-height:1.35}
+.form-mnemonic .row2 .mk,.form-mnemonic .key{font-size:var(--t-xl); color:var(--ink)}
+.form-mnemonic .ptext{font-size:var(--t-base); margin-top:var(--s-4)}
+
+/* takeaway — one source, one claim, a lot of air */
+.form-takeaway .claim{font-size:var(--t-lg); font-weight:600; color:var(--ink);
+  line-height:1.25; letter-spacing:-.018em; margin:var(--s-2) 0 var(--s-4)}
+.form-takeaway .ptext{max-width:64ch}
+
+/* directory — monospace left column, uniform rows, long */
+.form-directory .drow .code{justify-self:start}
+
+/* figure — image entries; the caption is the only thing that changes */
+.form-figure{max-width:var(--w-wide)}
+.form-figure .photo{margin-bottom:var(--s-2)}
+
 /* ---------- tables ---------- */
 table.cmp{width:100%; border-collapse:collapse; margin:var(--s-2) 0 var(--s-4)}
 .cmp th{
@@ -301,6 +444,11 @@ table.cmp{width:100%; border-collapse:collapse; margin:var(--s-2) 0 var(--s-4)}
 .toc .subs{margin:2px 0 var(--s-2)}
 .toc .subs a{padding:2px var(--s-2) 2px var(--s-6); font-size:var(--t-xs); color:var(--slate)}
 .toc .subs a.active{color:var(--ink); background:none; font-weight:500; border-left-color:transparent}
+/* shortcut hint lives in the rail, not only at the foot of a long page */
+.keyhint{margin:var(--s-5) 0 0; padding-top:var(--s-3); border-top:1px solid var(--line);
+  font-size:var(--t-xs); color:var(--slate); line-height:1.9}
+.keyhint kbd{margin-right:3px}
+.keyhint .sep{opacity:.5; margin:0 2px}
 
 /* ---------- shortcuts ---------- */
 #keys{border:none; padding:0; background:transparent}
@@ -333,6 +481,43 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
   /* comfortable tap targets */
   .tocm li a,.tocm .toc-recent a{padding-top:9px; padding-bottom:9px}
   .tocm .toc-sec-link{padding-top:8px; padding-bottom:8px}
+
+  /* card accent edge sits in the narrower phone gutter */
+  .card::before{left:calc(-1 * var(--s-2))}
+  .card h2{font-size:var(--t-lg)}
+
+  /* --- phone behaviour per form, specified rather than inherited --- */
+  /* peers: 2 up, never 1 (a 7-item list would become 7 lines and bury the row) */
+  .peers{grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:var(--s-4)}
+  .peers.wide{grid-template-columns:1fr}
+  /* slots + terms: label stacks above its value */
+  .slots{grid-template-columns:1fr; gap:0}
+  .slots > .sk{padding-top:var(--s-2)}
+  .form-slots .term{grid-template-columns:1fr; gap:2px}
+  /* branch: condition above its action, arrow turns down */
+  .branch{grid-template-columns:max-content minmax(0,1fr); gap:2px var(--s-2)}
+  .br{display:grid; grid-template-columns:subgrid; grid-column:1/-1}
+  .branch .arr{display:none}
+  .branch .cond::after{content:"\00a0\2192"; color:var(--gray); font-weight:400}
+  /* ladder spine would crowd a 375px screen; markers keep the order */
+  .form-ladder .steps{padding-left:0}
+  .form-ladder .steps::before{display:none}
+  .form-ladder .steps .row2 > div:first-child{padding-left:var(--s-6)}
+  /* stacked, the notes cell would just run on after the dose. Subordinate it
+     to its step with a rule rather than repeating a label in every entry. */
+  .form-ladder .steps .row2.rule > div:last-child{
+    border-left:2px solid var(--line-2); padding-left:var(--s-3); margin-top:var(--s-1)}
+  .form-ladder .steps .row2.rule > div:last-child:has(> .mk){padding-left:var(--s-6)}
+  /* stage bands keep their rule but lose the extra air */
+  .form-stage .band{padding-top:var(--s-2)}
+  /* mnemonic steps down one notch so a 4-row entry still fits a screen */
+  .form-mnemonic .row2{font-size:var(--t-md); padding:var(--s-2) var(--s-1)}
+  .form-mnemonic .row2 .mk,.form-mnemonic .key{font-size:var(--t-lg)}
+  .form-takeaway .claim{font-size:var(--t-md)}
+  /* directory: code above description */
+  .drow{grid-template-columns:1fr}
+  /* footnotes and asides stay put, just tighter */
+  .notes{padding-left:var(--s-4)}
     }
 
 /* ---------- wide ---------- */
@@ -345,12 +530,70 @@ kbd{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace; font-size:var(--t-
   .layout{display:grid; grid-template-columns:256px minmax(0,920px); gap:var(--s-6); align-items:start}
   .toc{display:block; position:sticky; top:72px; max-height:calc(100vh - 96px); overflow-y:auto; padding:var(--s-5) var(--s-1) var(--s-5) 0; scrollbar-width:thin}
   .card > header,.sechead,.meta{margin-left:-24px}
+  .card::before{left:-24px}
 }
 
+/* ---------- wide: width per form, and sidenotes in the true right margin ----------
+   256 rail + 32 gap + 1100 content = 1388 = 1420 wrap less its 16px padding,
+   so a matrix or flow sheet finally gets the measure it was drawn for while
+   prose stays at 72ch. */
+@media (min-width:1420px){
+  .top.wrap,.searchbar .wrap,.layout.wrap,.tabs .wrap,.wbview.wrap{max-width:1420px}
+  .layout{grid-template-columns:256px minmax(0,var(--w-wide))}
+  .form-takeaway .claim{font-size:var(--t-4xl)}
+  /* the scan forms leave a 220px right margin; .aside moves into it */
+  /* Only where the line owns the full measure AND the form is width-capped
+     below the column, so there is real margin to float into. Inside a .row2
+     cell the right margin is the next COLUMN; in a wide form there is no
+     margin at all — an aside stays inline in both cases. */
+  .pearl:not(.form-matrix,.form-branch,.form-directory,.form-figure)
+  :is(.strip,.acts > div,.slots > .sv,.form-slots .term > div) > .aside{
+    position:absolute; left:calc(100% + var(--s-4)); top:0; width:178px; margin:0;
+    text-align:left; hyphens:none; overflow-wrap:break-word;
+  }
+  .acts > div,.form-slots .term > div,.slots > .sv{position:relative}
+}
+
+/* ---------- print: pocket cards ----------
+   One entry per page where it fits, sidenotes folded back inline, and every
+   landmark carried by rule weight / caps / indent so none of it depends on
+   colour surviving a grayscale laser printer. */
 @media print{
-  .searchbar,.foot,.toc,.tocm,#keys,.draftbar,.tabs{display:none}
-  .card{break-inside:avoid}
-  body{background:#fff}
+  .searchbar,.foot,.toc,.tocm,#keys,.draftbar,.tabs,.top .right,.res-hint{display:none !important}
+  html,body{background:#fff}
+  body{font-size:9.5pt; line-height:1.45}
+  .wrap,.layout.wrap,.top.wrap{max-width:none; padding:0}
+  .layout{display:block}
+  .card > header,.sechead,.meta{margin-left:0}
+
+  /* one entry to a page */
+  .card{break-inside:auto; break-after:page; margin:0 0 12pt; padding-left:0}
+  .card:last-of-type{break-after:auto}
+  .card::after{display:none}
+  /* the accent edge becomes a neutral rule — colour is not the carrier */
+  .card::before{background:#000; opacity:1; left:-10pt; width:1.5pt}
+  .sechead{break-after:avoid; break-inside:avoid; font-size:13pt; margin:0 0 8pt;
+    border-top-width:1.5pt; border-top-color:#000; color:#000}
+  .card h2{font-size:13pt; break-after:avoid}
+  .sec{break-after:avoid; break-inside:avoid; font-size:10.5pt}
+  .sec.later{border-top-color:#666}
+
+  /* nothing that scrolls on paper */
+  .tblwrap{overflow:visible}
+  .tblwrap table,.tblwrap .sheet{min-width:0 !important; width:100% !important}
+  .row2,.strip,.acts > div,.slots,.branch,.drow,.form-slots .term,.peers,tr,li{break-inside:avoid}
+
+  /* sidenotes fold back inline wherever the wide rule had floated them out */
+  .aside{position:static !important; width:auto !important; display:block;
+    margin:1pt 0 2pt !important; font-size:8.5pt}
+  .notes{font-size:8.5pt; break-inside:avoid}
+  .figcap{font-size:8.5pt}
+  .photo{max-height:8in; object-fit:contain; break-inside:avoid}
+
+  /* links are useless on paper unless they say where they go */
+  .body a[href^="http"]::after{content:" (" attr(href) ")"; font-size:7.5pt; color:#444;
+    word-break:break-all; font-weight:400}
+  a{color:#000; text-decoration:underline}
 }
 
 /* ---------- draft preview mode (#draft=…) ---------- */
