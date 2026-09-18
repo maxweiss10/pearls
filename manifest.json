@@ -10,21 +10,23 @@
     "MSK & Sports",
     "Inpatient Essentials",
     "GI & Hepatology",
-    "Papers"
+    "Papers",
+    "Renal &amp; Electrolytes",
+    "Cross-Cover &amp; Acute Care"
   ],
   "entries": [
     {
       "id": "2026-09-16-opioid-pruritus",
       "title": "Opioid Pruritus on Night Float",
       "date": "2026-09-16",
-      "section": "Cross-Cover & Acute Care",
+      "section": "Cross-Cover &amp; Acute Care",
       "keywords": "opioid, pruritus, itching, nalbuphine, nubain, naloxone, ondansetron, zofran, diphenhydramine, benadryl, opioid rotation, morphine, hydromorphone, cross-cover, night float, sickle cell, note"
     },
     {
       "id": "2026-09-16-electrolyte-repletion",
       "title": "Electrolyte Repletion",
       "date": "2026-09-16",
-      "section": "Renal & Electrolytes",
+      "section": "Renal &amp; Electrolytes",
       "keywords": "potassium, hypokalemia, kcl, magnesium, hypomagnesemia, magnesium sulfate, magnesium oxide, phosphorus, hypophosphatemia, phos-nak, k-phos, calcium, hypocalcemia, calcium gluconate, calcium chloride, electrolyte repletion, lytes, white book, note"
     },
     {
@@ -57,18 +59,11 @@
       "keywords": "rbbb, lbbb, right bundle branch block, left bundle branch block, ivcd, intraventricular conduction delay, terminal forces, rsr prime, rabbit ears, masquerading bundle branch block, lafb, qrs duration, photo"
     },
     {
-      "id": "2026-08-22-adhf-gdmt",
-      "title": "HFrEF: The Four Pillars",
-      "date": "2026-08-22",
-      "section": "Cardiology",
-      "keywords": "heart failure, hfref, gdmt, four pillars, guideline directed medical therapy, beta blocker, carvedilol, metoprolol succinate, bisoprolol, arni, sacubitril-valsartan, entresto, acei, arb, losartan, valsartan, mra, spironolactone, eplerenone, sglt2 inhibitor, dapagliflozin, empagliflozin, titration, sequencing, discharge, euglycemic dka, angioedema, hyperkalemia, slide"
-    },
-    {
       "id": "2026-08-22-adhf-decongestion-gdmt",
-      "title": "ADHF: Decongestion",
+      "title": "ADHF: Decongestion & GDMT",
       "date": "2026-08-22",
       "section": "Cardiology",
-      "keywords": "heart failure, hfref, adhf, decongestion, diuresis, furosemide, bumetanide, metolazone, chlorothiazide, acetazolamide, advor, clorotic, loop infusion, afterload reduction, vasodilator, nitroprusside, hydralazine, isdn, nitroglycerin, nicardipine, clevidipine, net negative, slide"
+      "keywords": "heart failure, hfref, adhf, diuresis, furosemide, metolazone, acetazolamide, advor, clorotic, gdmt, sacubitril-valsartan, spironolactone, sglt2 inhibitor, afterload reduction, slide"
     },
     {
       "id": "2026-08-09-pleural-effusion",

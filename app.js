@@ -57,30 +57,6 @@
     const p = iso.split('-').map(Number);
     return MONTHS[p[1] - 1] + ' ' + p[2] + ', ' + p[0];
   }
-  /* Text for search and snippets.
-     Plain .textContent concatenates adjacent boxes with no whitespace, so a
-     peers grid <span>JVP</span><span>heart sounds</span> indexes as
-     "jvpheart" and the 3-character query "JVP" stops matching — while an
-     inline <b>T</b>artrate must NOT be split, or "tartrate" stops matching.
-     The difference is layout, not tag name (a grid item's computed display is
-     blockified), so separate on computed display and leave true inlines alone. */
-  function indexText(root) {
-    let out = '';
-    (function walk(node) {
-      for (let c = node.firstChild; c; c = c.nextSibling) {
-        if (c.nodeType === 3) { out += c.nodeValue; continue; }
-        if (c.nodeType !== 1) continue;
-        if (c.tagName === 'STYLE' || c.tagName === 'SCRIPT') continue;
-        let inline = false;
-        try { inline = getComputedStyle(c).display === 'inline'; } catch (e) { inline = false; }
-        if (!inline) out += ' ';
-        walk(c);
-        if (!inline) out += ' ';
-      }
-    })(root);
-    return out;
-  }
-
   function slugify(s) {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
@@ -255,15 +231,7 @@
 
   function renderToc() {
     const html = tocHtml();
-    /* j/k were only advertised in the footer, at the bottom of a very long
-       page. The sticky rail is where someone is actually scrolling. */
-    if ($toc) {
-      $toc.innerHTML = html +
-        '<p class="keyhint"><kbd>j</kbd><kbd>k</kbd> next / prev note' +
-        '<span class="sep"> · </span><kbd>/</kbd> search' +
-        '<span class="sep"> · </span><kbd>?</kbd> all keys</p>';
-      wireToc($toc);
-    }
+    if ($toc) { $toc.innerHTML = html; wireToc($toc); }
     if ($tocmList) { $tocmList.innerHTML = html; wireToc($tocmList); }
     updateSpy();
   }
@@ -384,18 +352,12 @@
 
       s.metas.forEach(function (meta) {
         const built = buildCard(meta, fragMap[meta.id]);
-        /* the card carries its discipline so the 2px accent edge can resolve
-           --sec-accent; the section header alone can't reach a sibling */
-        built.card.dataset.sec = slugify(s.name);
-        /* .sec ids were previously assigned by updateSpy, and only for the
-           active card — so #id-s2 in a shared URL silently failed on a cold
-           load. Assign them up front; updateSpy's guard now never fires. */
-        built.bodyEl.querySelectorAll('.sec').forEach(function (sc, i) {
-          if (!sc.id) sc.id = meta.id + '-s' + i;
-        });
         $list.appendChild(built.card);
         const alts = Array.prototype.map.call(built.bodyEl.querySelectorAll('img[alt]'), function (im) { return im.alt; }).join(' ');
-        const bodyText = (indexText(built.bodyEl) + ' ' + alts).replace(/\s+/g, ' ').trim();
+        /* text for search/snippets: clone minus <style>, so scoped CSS never leaks in */
+        const clone = built.bodyEl.cloneNode(true);
+        clone.querySelectorAll('style').forEach(function (st) { st.remove(); });
+        const bodyText = ((clone.textContent || '') + ' ' + alts).replace(/\s+/g, ' ').trim();
         const e = {
           meta: meta,
           card: built.card,
@@ -1162,10 +1124,7 @@
     .then(function (manifest) {
       return Promise.all(
         manifest.entries.map(function (m) {
-          /* revalidate: an edited entry is the one thing on this site that
-             changes under a stable URL, so a cached fragment shows yesterday's
-             text after a publish. 'no-cache' still takes the cheap 304. */
-          return fetch('entries/' + m.id + '.html', { cache: 'no-cache' })
+          return fetch('entries/' + m.id + '.html')
             .then(function (r) { if (!r.ok) throw new Error(m.id); return r.text(); })
             .catch(function () { return '<p class="ptext mut">This note failed to load.</p>'; })
             .then(function (html) { return [m.id, html]; });

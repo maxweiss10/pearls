@@ -84,9 +84,9 @@ The site's Resources tab is a flat list of links (`resources.json`: `{title, url
 
 ## 3 · Design the entry
 
-**Read `reference/design-system.md` before writing any fragment.** It is section 4 of the repo skill, verbatim, and carries the full doctrine: the eight structural forms, the separator grammar (one mark, one job — the middot is banned from entry bodies and the em dash is no longer the default joint), footnotes and sidenotes, the strict colour budget, width per form, and the flow-sheet exception. Follow it exactly — the site's CSS supplies all styling, so fragments are almost pure semantic markup.
+**Read `reference/design-system.md` before writing any fragment.** It carries the full doctrine: the strict color budget (grayscale + oxblood red for clinical danger/escalation only), scan anatomy, the base classes, structure patterns, and the flow-sheet exception. Follow it exactly — the site's CSS supplies all styling, so fragments are almost pure semantic markup.
 
-Non-negotiables: root `<div class="pearl form-{name} e-{short}">` — **the form class is required** and must be one of `form-ladder` `form-stage` `form-slots` `form-matrix` `form-branch` `form-mnemonic` `form-directory` `form-takeaway` `form-figure`; real text only; no scripts, iframes, external resources, `<html>/<head>/<body>`, or entry title at top; wrap tables in `<div class="tblwrap">`; no `·` middot anywhere in the body; a `<sup class="fn">` marker carries a leading `&#8201;`; `section` is the raw string (`Renal & Electrolytes`, never `Renal &amp; Electrolytes`); never write a `@media (prefers-color-scheme: dark)` block; scoped `<style>` only when the base classes genuinely can't express the layout, every selector prefixed `.e-{short}`, layout properties only — never colours (flow sheets excepted).
+Non-negotiables: root `<div class="pearl e-{short}">`; real text only; no scripts, iframes, external resources, `<html>/<head>/<body>`, or entry title at top; wrap tables in `<div class="tblwrap">`; scoped `<style>` only when the base classes genuinely can't express the layout, every selector prefixed `.e-{short}`, layout properties only — never colors (flow sheets excepted).
 
 ## 3a · Using the actual image — when Max asks for it explicitly
 

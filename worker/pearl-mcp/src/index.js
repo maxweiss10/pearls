@@ -87,21 +87,6 @@ async function toolStatus(env, a) {
   };
 }
 
-/* Section names are stored raw ("Renal & Electrolytes") and rendered by the site as a
-   text node. An HTML-escaped value ("Renal &amp; Electrolytes") therefore renders
-   literally AND fails the exact-string compare below, silently forking a duplicate
-   section with no discipline accent. Unescape, then snap to an existing section that
-   differs only by case or whitespace. */
-function canonSection(raw, sections) {
-  let s = String(raw || '').trim()
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ');
-  const key = s.toLowerCase();
-  const hit = (sections || []).find((x) => String(x).trim().toLowerCase() === key);
-  return hit || s;
-}
-
 async function stageEntry(env, a, message) {
   const errs = [];
   if (!/^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/.test(a.id || '')) errs.push('bad id (YYYY-MM-DD-slug)');
@@ -111,24 +96,6 @@ async function stageEntry(env, a, message) {
   if (!html.includes('class="pearl')) errs.push('html lacks the pearl root div');
   if (html.length > 20000) errs.push('html over 20KB — split the entry');
   if (/<script|<iframe|javascript:|\bon\w+\s*=/i.test(html)) errs.push('scripts/handlers not allowed');
-
-  /* Style-guide gate (SKILL.md section 4). These are the rules a stale copy of the
-     skill actually broke in production, so they fail here rather than shipping. */
-  const FORMS = ['form-ladder', 'form-stage', 'form-slots', 'form-matrix', 'form-branch',
-                 'form-mnemonic', 'form-directory', 'form-takeaway', 'form-figure'];
-  const root = html.match(/^\s*<div class="pearl([^"]*)"/);
-  const declared = root ? root[1].split(/\s+/).filter((c) => FORMS.includes(c)) : [];
-  if (!declared.length) errs.push(`root div needs a form class, one of: ${FORMS.join(', ')}`);
-  if (declared.length > 1) errs.push(`only one form class, got: ${declared.join(', ')}`);
-
-  const bodyText = html.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
-  if (bodyText.includes('\u00b7'))
-    errs.push('middot in the body — retired from entry bodies (SKILL.md 4.2)');
-  if (/<sup class="fn">(?!\s|&#8201;|&nbsp;|\u2009)/.test(html))
-    errs.push('a <sup class="fn"> marker needs a leading &#8201; or the search index fuses it to the previous word');
-  if (/@media[^{]*prefers-color-scheme/i.test(html))
-    errs.push('no prefers-color-scheme block — the site is light-only, so it renders dark text on a dark box');
-
   if (errs.length) throw new Error('validation: ' + errs.join('; '));
 
   const prev = await getDraft(env);
@@ -138,11 +105,10 @@ async function stageEntry(env, a, message) {
   const manifestFile = await gh(env, 'GET', '/contents/manifest.json?ref=main');
   const man = JSON.parse(b64decodeUtf8(manifestFile.content));
   man.entries = man.entries.filter((e) => e.id !== a.id);
-  const section = canonSection(a.section, man.sections);
-  const row = { id: a.id, title: a.title, date: a.date, section, keywords: a.keywords };
+  const row = { id: a.id, title: a.title, date: a.date, section: a.section, keywords: a.keywords };
   if (a.source) row.source = a.source;
   man.entries.unshift(row);
-  if (!man.sections.includes(section)) man.sections.push(section);
+  if (!man.sections.includes(a.section)) man.sections.push(a.section);
 
   const tree = [
     { path: `entries/${a.id}.html`, mode: '100644', type: 'blob', content: html + '\n' },
@@ -409,7 +375,7 @@ const TOOLS = [
         section: { type: 'string' },
         keywords: { type: 'string', description: 'flat lowercase comma-separated' },
         source: { type: 'string', description: 'papers/videos only' },
-        html: { type: 'string', description: 'the entry fragment; root <div class="pearl form-{name} e-{short}"> where form-{name} is one of form-ladder, form-stage, form-slots, form-matrix, form-branch, form-mnemonic, form-directory, form-takeaway, form-figure. No middots in the body; a <sup class="fn"> footnote marker carries a leading &#8201;. See SKILL.md section 4.' },
+        html: { type: 'string', description: 'the entry fragment; root <div class="pearl e-{short}">' },
         use_inbox_photos: { type: 'boolean' },
       },
     },

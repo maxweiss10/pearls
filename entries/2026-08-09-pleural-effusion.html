@@ -1,6 +1,8 @@
-<div class="pearl form-branch e-ple">
+<div class="pearl e-ple">
 <style>
 .e-ple{--stepbg:#f1f0e9;--stepbd:#dcd9cb;--gnbg:#e9f5ee;--gnbd:#c0dfcc;--gn:#1c6b4a;--rdbg:#fdefe9;--rdbd:#f0cabb;--rd:#a3492e;--pillbg:#ffffff;--pillbd:#c9cdd3;--con:#b9bfc7}
+@media (prefers-color-scheme:dark){.e-ple{--stepbg:#26261f;--stepbd:#3b392c;--gnbg:#16302a;--gnbd:#2c5a48;--gn:#8fd0ae;--rdbg:#38231b;--rdbd:#6b3a2a;--rd:#e8a183;--pillbg:#1b2026;--pillbd:#454c55;--con:#4a525c}}
+.e-ple .fnote{font-size:.85em;color:var(--mut);margin:0 0 12px;line-height:1.5}
 .e-ple .frow{display:grid;grid-template-columns:minmax(0,42%) 118px minmax(0,1fr);align-items:center}
 .e-ple .box{border:1px solid;border-radius:9px;padding:9px 12px;min-width:0}
 .e-ple .step{background:var(--stepbg);border-color:var(--stepbd)}
@@ -19,6 +21,8 @@
 .e-ple .down{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 0}
 .e-ple .down .dar{color:var(--con);line-height:.9;font-size:1.05em}
 .e-ple .why{border:1px solid var(--line2);border-radius:9px;padding:9px 12px;margin-top:16px}
+.e-ple .legend{display:flex;flex-wrap:wrap;gap:5px 16px;align-items:center;margin-top:12px;font-size:.78em;color:var(--mut)}
+.e-ple .sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid;vertical-align:-1px;margin-right:5px}
 .e-ple .sw.s{background:var(--stepbg);border-color:var(--stepbd)}
 .e-ple .sw.g{background:var(--gnbg);border-color:var(--gnbd)}
 .e-ple .sw.r{background:var(--rdbg);border-color:var(--rdbd)}
@@ -38,7 +42,7 @@
     <div class="box step">
       <div class="eb">Step 1</div>
       <div class="bt">Light's criteria</div>
-      <div class="bc">Protein ratio &gt;0.5<br>LDH ratio &gt;0.6<br>Fluid LDH &gt; 2/3 of serum ULN</div>
+      <div class="bc">Protein ratio &gt;0.5 · LDH ratio &gt;0.6<br>Fluid LDH &gt; 2/3 of serum ULN</div>
     </div>
     <div class="harrow"><span class="hl"></span><span class="pill">ALL 3 NEGATIVE</span><span class="hl"></span><span class="ah"></span></div>
     <div class="box go">
@@ -71,7 +75,7 @@
     <div class="harrow"><span class="hl"></span><span class="pill">CRITERIA MET</span><span class="hl"></span><span class="ah"></span></div>
     <div class="box go">
       <div class="bt">Pseudoexudate → transudate</div>
-      <div class="bc">Diuretics inflated the fluid labs.<br>Catches ~83% (HF), ~77% (cirrhosis)</div>
+      <div class="bc">Diuretics inflated the fluid labs.<br>Catches ~83% (HF) · ~77% (cirrhosis)</div>
     </div>
   </div>
   <div class="downrow"><div class="down"><span class="pill">NOT MET</span><span class="dar">↓</span></div></div>
@@ -80,12 +84,12 @@
     <div class="box step">
       <div class="eb">Step 4</div>
       <div class="bt">NT-proBNP</div>
-      <div class="bc">Fluid or serum, cutoff <span class="dose">1500 pg/mL</span></div>
+      <div class="bc">Fluid or serum · cutoff <span class="dose">1500 pg/mL</span></div>
     </div>
     <div class="harrow"><span class="hl"></span><span class="pill">≥1500</span><span class="hl"></span><span class="ah"></span></div>
     <div class="box go">
       <div class="bt">Cardiac effusion (transudate)</div>
-      <div class="bc"><span class="peers tight"><span>Sens 94%</span><span>Spec 94%</span><span>LR+ 15.2</span></span></div>
+      <div class="bc">Sens 94% · Spec 94% · LR+ 15.2</div>
     </div>
   </div>
   <div class="downrow"><div class="down"><span class="pill">&lt;1500</span><span class="dar">↓</span></div></div>
