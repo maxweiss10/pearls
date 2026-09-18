@@ -87,6 +87,21 @@ async function toolStatus(env, a) {
   };
 }
 
+/* Section names are stored raw ("Renal & Electrolytes") and rendered by the site as a
+   text node. An HTML-escaped value ("Renal &amp; Electrolytes") therefore renders
+   literally AND fails the exact-string compare below, silently forking a duplicate
+   section with no discipline accent. Unescape, then snap to an existing section that
+   differs only by case or whitespace. */
+function canonSection(raw, sections) {
+  let s = String(raw || '').trim()
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ');
+  const key = s.toLowerCase();
+  const hit = (sections || []).find((x) => String(x).trim().toLowerCase() === key);
+  return hit || s;
+}
+
 async function stageEntry(env, a, message) {
   const errs = [];
   if (!/^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/.test(a.id || '')) errs.push('bad id (YYYY-MM-DD-slug)');
@@ -105,10 +120,11 @@ async function stageEntry(env, a, message) {
   const manifestFile = await gh(env, 'GET', '/contents/manifest.json?ref=main');
   const man = JSON.parse(b64decodeUtf8(manifestFile.content));
   man.entries = man.entries.filter((e) => e.id !== a.id);
-  const row = { id: a.id, title: a.title, date: a.date, section: a.section, keywords: a.keywords };
+  const section = canonSection(a.section, man.sections);
+  const row = { id: a.id, title: a.title, date: a.date, section, keywords: a.keywords };
   if (a.source) row.source = a.source;
   man.entries.unshift(row);
-  if (!man.sections.includes(a.section)) man.sections.push(a.section);
+  if (!man.sections.includes(section)) man.sections.push(section);
 
   const tree = [
     { path: `entries/${a.id}.html`, mode: '100644', type: 'blob', content: html + '\n' },
