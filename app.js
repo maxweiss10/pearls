@@ -1124,7 +1124,10 @@
     .then(function (manifest) {
       return Promise.all(
         manifest.entries.map(function (m) {
-          return fetch('entries/' + m.id + '.html')
+          /* revalidate: an edited entry is the one thing on this site that
+             changes under a stable URL, so a cached fragment keeps showing
+             yesterday's text after a publish. 'no-cache' still takes the 304. */
+          return fetch('entries/' + m.id + '.html', { cache: 'no-cache' })
             .then(function (r) { if (!r.ok) throw new Error(m.id); return r.text(); })
             .catch(function () { return '<p class="ptext mut">This note failed to load.</p>'; })
             .then(function (html) { return [m.id, html]; });

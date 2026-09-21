@@ -84,9 +84,9 @@ The site's Resources tab is a flat list of links (`resources.json`: `{title, url
 
 ## 3 · Design the entry
 
-**Read `reference/design-system.md` before writing any fragment.** It carries the full doctrine: the strict color budget (grayscale + oxblood red for clinical danger/escalation only), scan anatomy, the base classes, structure patterns, and the flow-sheet exception. Follow it exactly — the site's CSS supplies all styling, so fragments are almost pure semantic markup.
+**Read `reference/design-system.md` before writing any fragment.** It is section 4 of the repo skill, verbatim. Every entry is set in the **White Book register** — Arial Narrow, `#D9D9D9` small-caps section bars, black-header tables with `#F2F2F2` zebra rows, colon as the lead-to-detail joint, bold (never red) for emphasis, no middots. The site's CSS supplies all of it, so fragments are almost pure semantic markup.
 
-Non-negotiables: root `<div class="pearl e-{short}">`; real text only; no scripts, iframes, external resources, `<html>/<head>/<body>`, or entry title at top; wrap tables in `<div class="tblwrap">`; scoped `<style>` only when the base classes genuinely can't express the layout, every selector prefixed `.e-{short}`, layout properties only — never colors (flow sheets excepted).
+Non-negotiables: root `<div class="pearl e-{short}">`; at least one `.wbbar` section bar; real text only; no scripts, iframes, external resources, `<html>/<head>/<body>`, or entry title at top; wrap every `table.wbt` in `<div class="tblwrap">`; **no `·` middot anywhere in the body**; no `⚠`/`★` glyphs and no red (bold carries emphasis); never a `@media (prefers-color-scheme: dark)` block; `section` is the raw string (`Renal & Electrolytes`, never `Renal &amp; Electrolytes`); scoped `<style>` should almost never be needed now the register is global — if it is, prefix every selector `.e-{short}`, layout only, never colours (flow sheets excepted).
 
 ## 3a · Using the actual image — when Max asks for it explicitly
 

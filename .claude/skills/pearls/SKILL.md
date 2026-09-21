@@ -36,7 +36,7 @@ Interpret intent from whatever the user says. When they don't specify a format, 
 | A quick fact or mnemonic in a sentence | Small **text pearl** |
 | "fix / retitle / regenerate / move to <section> [entry]" | **Edit** `entries/*.html` and/or `manifest.json` on the draft branch — ids and filenames stay stable; preview shows the edited version |
 | "push / publish / yes / ship it" (a draft is pending) | **Publish** — §7 |
-| "add a resource / add [site] to my resources" | **Resource** — append `{title, url, desc, icon}` to `resources.json` (repo root, an ordered array rendered by the site's Resources tab). `icon` is ALWAYS included: one emoji that fits the resource (📦 Box, 📅 calendar, 📖 manual, 🫀 CVD calculator…), shown next to the link. No draft branch: restate exactly what will be added in one line, then commit straight to main (`Pearl: resource — {title}`); it is a link row, instantly `git revert`-able. Same flow to edit or remove a resource row (removal still gets a one-line confirm naming the row). |
+| "add a resource / add [site] to my resources" | **Resource** — append `{title, url, desc, icon}` to `resources.json` (repo root, an ordered array rendered by the site's Resources tab). `icon` is ALWAYS included: one emoji that fits the resource (📦 Box, 📅 calendar, 📖 manual, 🫀 CVD calculator…), shown next to the link. No draft branch: restate exactly what will be added in one line, then commit straight to main (`Pearl: resource — {title}`); it is a link row, instantly `git revert`-able. Same flow to edit or remove a resource row (removal still gets a one-line confirm naming the row). Icons render from bundled Noto Emoji SVGs (`icons/emoji/emoji_u<hex>.svg`, U+FE0F dropped) so they look the same on hospital Windows PCs — for a NEW emoji also add its SVG: `curl -sL https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/svg/emoji_u<hex>.svg -o icons/emoji/emoji_u<hex>.svg` (otherwise the site falls back to the jsDelivr copy, then plain text). |
 | "delete / remove [entry]" | **Delete — confirmation REQUIRED first.** Name exactly what will be removed (title · section · date), note it stays recoverable in git history, get an explicit yes via AskUserQuestion. Only after the yes: delete `entries/{id}.html` and any `entries/img/{id}-*.jpg`, remove the manifest row (and the section from `sections[]` if now empty), then `git checkout main && git pull --rebase origin main`, commit `Pearl: delete {TITLE}`, push. Never delete on an ambiguous reference — resolve which entry first. |
 
 Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but are never required. If the request is genuinely ambiguous, ask ONE short question; otherwise proceed to a preview.
@@ -79,40 +79,106 @@ Legacy keywords (`raw`, `each`, `merge`, `merge-raw`, `paper`) still work but ar
 - **Section**: pick from `manifest.json → sections` (medical sub-disciplines, White-Book style). If none fits, CREATE one at discipline level (e.g. "Pulmonology", "Infectious Diseases", "GI & Hepatology", "Heme/Onc", "Neurology", "Outpatient & Prevention", "Procedures", "UCSF Systems & Epic") and insert it at a sensible position in the sections array. No near-duplicates, no over-narrow sections.
 - **Keywords**: 8-15 flat lowercase comma-separated tokens — drugs (generic + brand), diagnoses (full + abbrev), core concepts, distinctive context, plus one source-type token (`chalktalk`/`slide`/`paper`/`photo`/`note`/`video`). No doses, no sentence fragments. Keywords live in the manifest ONLY — the site indexes them for search but never displays them.
 
-## 4 · Design the entry — clinical reference register, real text always
+## 4 · Design the entry — the White Book register
 
-The register is Sanford Guide / Pocket Medicine, not slides. Typography, alignment, and position carry ALL hierarchy. **Grayscale print test:** if the entry's hierarchy would collapse printed in grayscale, redo it — hierarchy must be structural, not chromatic. **Squint test:** blurred, only the entry title and the red cautions should survive.
+**Every entry should look like a page torn out of the MGH Housestaff Manual.** That is the whole brief. When in doubt, open the book (`~/Documents/UCSF/Resources/White book OG.pdf`, or maxweiss10.github.io/whitebook) and copy what it does.
 
-**Color budget (strict)**
-- Grayscale by default. Muted blue is for links only — never inside entries.
-- Red (`.warn`, deep oxblood) is reserved EXCLUSIVELY for clinical danger AND escalation actions — toxicity, contraindication, do-not-miss, "call RT", "call RICU", "escalate to a carbapenem". The whole class gets red; never split it between red and bold. Nothing else is colored, so when something is red it lands.
-- No filled bars/panels/pills/badges/coins/tiles, no shadows, no rounded boxes, no per-entry palettes, no decorative glyphs or emoji (no ⚠ ★ ☾ — red text IS the caution marker).
+The values below were sampled at 200 dpi from the book itself — Geriatrics & Palliative Care / Pain Management, printed pp. 153–154. They already live in `pearl.css`; you write markup, not CSS.
 
-**Scan anatomy** — every row same fixed slots, so the eye drops straight down a column:
-- drug/lead name in `<b>` · attributes plain or `.mut`/`.mech` · dose in `.dose` (tabular figures, units verbatim) · cautions LAST, in `.warn`
-- ordered items: markers as `<b class="mk">1.</b>` / `<b class="mk">A.</b>` at text size — the site hangs them in a left gutter so wrapped lines align under the text, never under the marker. No coins or tiles.
-- separator convention: lead **—** details, items inside the details separated by `·` ("**Norepinephrine** (Levophed) — α > β"). Use the em dash everywhere a lead meets its detail; never a colon.
-- conditional/parenthetical asides in `.mut` (renders italic gray) — e.g. "(blood cultures, troponin, d-dimer, type & screen)"
+| | |
+|---|---|
+| Body font | **Arial Narrow** (Bold, Italic) — condensed is why the book fits so much |
+| Section bar | `#D9D9D9`, bold, small-caps |
+| Table header | `#000` background, `#FFF` bold, centred |
+| Table rows | alternating `#FFFFFF` / `#F2F2F2`, 1px black grid all round |
+| Links | `#0432FF`, underlined |
+| Emphasis | **bold** — the book has no red and no glyphs |
 
-**Base primitives cover nearly everything** (`pearl.css`):
-`.sec` small-caps hairline section label (+`.later`) · `.caps` inline small-caps lead · `.strip` flow line · `.lab` bold lead-in · `.mut` `.mech` `.note` `.brand` gray secondary · `.row2` two-column hairline row (`.rule` adds a column divider; `.full` spans both; stacks automatically on phones with `.mlab` slot labels) · `.colhead2` small-caps column headers · `.duo` side-by-side halves · `table.cmp` hairline table (small-caps `th`, no zebra, wrap in `.tblwrap`) · `.dose` `.warn` `.drug` `.code` `.eyebrow` `.ptext` `.photo`
+### 4.1 The vocabulary
 
-**Structure by content** (all hairlines + typography):
-- Ordered escalation / sequence → `.colhead2` + numbered `.row2.rule` rows
-- Algorithm → Assess | Intervene `.row2.rule` columns
-- Agent comparison → `.cmp` table; Pro | Con as plain headers (position carries the meaning, not color)
-- Exam flow → `.sec`-numbered stages, or `.caps` position leads in strips
-- Mnemonic → bold key letters at text size in aligned `.row2` rows
-- Directory → `.code` | description grid rows
-- Paper / video → `.eyebrow` source label + bold takeaway in `.ptext`
-- Raw photos → stacked `.photo` imgs with detailed searchable alt text
-- **Flow sheets (exception to the no-filled-boxes rule):** when the source is itself a flowchart/diagram the user made or asks for, recreate the sheet faithfully as real-text HTML — boxes, labeled arrow pills, dashed grouping bands, and the source's own semantic exit coloring (tinted outcome boxes allowed HERE only; scoped vars; arrows via CSS lines/glyphs, never images) — do NOT flatten it into rows. Pattern references: `entries/2026-08-09-pleural-effusion.html`, `entries/2026-08-09-beta-lactam-ladder.html`.
+```html
+<div class="pearl e-{short}">
+  <div class="wbhead"><span class="spec">Chapter</span><span class="topic">Topic</span></div>
+  <div class="wbbar">Section Name <span class="cite">(<a href="…">source</a>)</span></div>
+  <ul><li><b>Lead</b>: detail</li></ul>
+  <div class="tblwrap"><table class="wbt">…</table></div>
+  <div class="wbbox"><b class="t">Boxed aside</b> …</div>
+  <div class="wbfoot">Source line</div>
+</div>
+```
 
-**Scoped `<style>` is the exception**, not the rule: only for a layout the primitives genuinely don't cover; every selector prefixed `.e-{short}`; layout properties only — never colors.
+- **`.wbhead`** — the running header, bold chapter left, topic right. **Optional**: only for entries that really come from a named chapter. Don't invent one; the site already prints the title and section above.
+- **`.wbbar`** — the one landmark, and the reason the book's pages scan. Title Case (`font-variant: small-caps` does the rest). Every entry has at least one. `.cite` inside it takes the blue source link, exactly where the book puts them.
+- **`<ul>`** — nests disc → circle → square on its own. Lead with a bold term.
+- **`table.wbt`** — always inside `.tblwrap` so it scrolls on a phone instead of crushing. `td.c` centres, `td.d` centres and bolds (doses), `td.n` stops wrapping, `td.band` is a black full-width sub-group row.
+- **`.wbbox`** — the book's bordered step-lists and caveats. `.wbbox.right` floats it.
+- **`.wbcap`** — teaching caption under a figure. **`.wbfoot`** — the italic centred source line above a rule, the way the book closes a page.
 
-**Hard rules**: root `<div class="pearl e-{short}">`; real text only; no scripts/iframes/external resources; no `<html>/<head>/<body>`; no title at top (site renders it); no rotated text; no fixed pixel widths on containers; density tight — hairline dividers, inline flow over bullet lists, no decorative padding; fragment ≤ ~8 KB (split rule, §1).
+### 4.2 Separators — copy the book
 
-**Images in entries** — real text is the default, but an explicit ask ("use the image itself", "as-is", "keep the diagram") overrides it: honor it, don't quietly redesign anyway (bytes permitting — §2). Place a figure as `.sec` label + `<img class="photo">` + optional `.note` caption when the source is a diagram, tracing, or chart markup can't reproduce honestly. Alt text IS the search index for that content: every drug, dose, arrow, and label in a sentence or two, never "photo of whiteboard", and the same terms go in the keywords. If the image is mostly typed text, say so in one line and build it as asked anyway.
+The book's joint is the **colon**: `Definition: T ≥100.4`, `Studies: BCx x2+ sites`, `Adverse effects: rare at sub-anesthetic dosing`. Then **semicolons between groups** and **commas within** one. That is the entire grammar.
+
+- `:` lead → detail. **Never an em dash for this.**
+- `;` between peer groups · `,` within a group
+- `→` state change, titration, "this leads to that"
+- `–` numeric ranges only
+- `<u>…</u>` for a sub-term the book would underline
+- **`·` middot: never.** It was doing seven jobs at once and is the main thing that made these entries unscannable.
+
+### 4.3 Emphasis and colour
+
+**Bold is the only emphasis.** The White Book has no red anywhere — its cautions are bold, sometimes caps (`AVOID in renal disease`). `.warn` still exists and still marks danger semantically, but it now renders bold black. Do not type a `⚠`, a `★`, or any other glyph.
+
+**Never write a `@media (prefers-color-scheme: dark)` block.** The site is `color-scheme: light only`, so the page stays white while your block fires — that shipped near-black text on a near-black box at 1.15:1 contrast, invisible on every dark-mode phone.
+
+### 4.4 Images
+
+Real text is the default, but an explicit ask ("use the image itself", "as-is", "keep the diagram") overrides it — honour it, don't quietly redesign anyway.
+
+An image entry keeps its image untouched and gains a **`.wbcap`** caption: a bold title plus bullets that decode the figure and name its own colours and arrows.
+
+**Alt text and caption are different texts.** Alt text IS the search index — it linearizes every drug, dose, arrow and label, and the same terms go in the keywords. The caption is written to be read. Never make one a copy of the other, and never shorten the alt to match.
+
+### 4.5 Flow sheets — the one exception
+
+When the source is itself a flowchart the user made or asked for, recreate it faithfully as real-text HTML — boxes, labelled arrow pills, dashed grouping bands, and the source's own semantic exit colouring (tinted outcome boxes allowed **here only**, scoped vars, arrows via CSS, never images). Do **not** flatten it into rows, and do not repaint it White Book grey: a decision tree's green and red exits are load-bearing. Give it a `.wbbar` heading and let it inherit the book's font. References: `entries/2026-08-09-pleural-effusion.html`, `entries/2026-08-09-beta-lactam-ladder.html`.
+
+### 4.6 Hard rules
+
+Root `<div class="pearl e-{short}">`; real text only; no scripts, iframes, handlers or external resources; no `<html>/<head>/<body>`; no title at the top (the site renders it); no rotated text; no fixed pixel widths on containers; fragment ≤ ~8 KB (split rule, §1).
+
+**Scoped `<style>` should now almost never be needed** — the register is global. If a layout genuinely isn't covered, prefix every selector `.e-{short}` and set layout only, never colour (flow sheets excepted).
+
+### 4.7 Section metadata — exact string
+
+`section` MUST be the raw string: `Renal & Electrolytes`, never `Renal &amp; Electrolytes`. The worker compares sections by exact string and the site renders them as a text node, so an escaped value silently forks a duplicate section that renders literally as "RENAL &AMP; ELECTROLYTES" with no discipline accent, sorted below Papers. This shipped to production once. Match an existing entry in `manifest.json → sections` verbatim.
+
+### 4.8 Worked example — before and after
+
+`opioid-pruritus`, step 3 notes. One middot string doing three different jobs:
+
+```
+BEFORE  Side effects with pain relief → rotate with dose reduction · side
+        effects without pain relief → rotate IV opioid, no reduction ·
+        morphine is the histamine offender, prefer hydromorphone/fentanyl
+
+AFTER   Side effects <u>with</u> pain relief → rotate with dose reduction.
+        Side effects <u>without</u> pain relief → rotate IV opioid, no
+        reduction. Morphine is the histamine offender, prefer
+        hydromorphone/fentanyl
+```
+
+`abcde`, Circulation / Intervene. Four separator systems flattened into one line, rebuilt as a cell in a `.wbt` with the book's own colon-then-semicolon grammar:
+
+```
+BEFORE  EKG · reliable access · labs: POCT glucose, CBC, BMP, LFT, lactate,
+        coags (blood cultures, troponin, d-dimer, type & screen) · fluid /
+        blood product / pressors / inotropes / antibiotics
+
+AFTER   EKG; reliable access; labs: POCT glucose, CBC, BMP, LFT, lactate,
+        coags <i>(blood cultures, troponin, d-dimer, type & screen)</i>;
+        fluid / blood product / pressors / inotropes / antibiotics
+```
 
 ## 5 · Manifest
 

@@ -87,6 +87,19 @@ async function toolStatus(env, a) {
   };
 }
 
+/* Section names are stored raw ("Renal & Electrolytes") and rendered by the site as
+   a text node, so an HTML-escaped value renders literally AND fails the exact-string
+   compare below, silently forking a duplicate section with no discipline accent. */
+function canonSection(raw, sections) {
+  let s = String(raw || '').trim()
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ');
+  const key = s.toLowerCase();
+  const hit = (sections || []).find((x) => String(x).trim().toLowerCase() === key);
+  return hit || s;
+}
+
 async function stageEntry(env, a, message) {
   const errs = [];
   if (!/^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/.test(a.id || '')) errs.push('bad id (YYYY-MM-DD-slug)');
@@ -96,6 +109,19 @@ async function stageEntry(env, a, message) {
   if (!html.includes('class="pearl')) errs.push('html lacks the pearl root div');
   if (html.length > 20000) errs.push('html over 20KB — split the entry');
   if (/<script|<iframe|javascript:|\bon\w+\s*=/i.test(html)) errs.push('scripts/handlers not allowed');
+
+  /* White Book register (SKILL.md section 4). These are the rules a stale copy of
+     the skill actually broke in production, so they fail here rather than ship. */
+  const bodyText = html.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
+  if (!/class="wbbar"/.test(html))
+    errs.push('no <div class="wbbar"> section bar — every entry needs at least one');
+  if (bodyText.includes('\u00b7'))
+    errs.push('middot in the body — the colon is the lead-to-detail joint now');
+  if (/[\u2605\u26a0]/.test(bodyText))
+    errs.push('no star or warning glyphs — bold carries emphasis');
+  if (/@media[^{]*prefers-color-scheme/i.test(html))
+    errs.push('no prefers-color-scheme block — the site is light-only, so it renders dark text on a dark box');
+
   if (errs.length) throw new Error('validation: ' + errs.join('; '));
 
   const prev = await getDraft(env);
@@ -105,10 +131,11 @@ async function stageEntry(env, a, message) {
   const manifestFile = await gh(env, 'GET', '/contents/manifest.json?ref=main');
   const man = JSON.parse(b64decodeUtf8(manifestFile.content));
   man.entries = man.entries.filter((e) => e.id !== a.id);
-  const row = { id: a.id, title: a.title, date: a.date, section: a.section, keywords: a.keywords };
+  const section = canonSection(a.section, man.sections);
+  const row = { id: a.id, title: a.title, date: a.date, section, keywords: a.keywords };
   if (a.source) row.source = a.source;
   man.entries.unshift(row);
-  if (!man.sections.includes(a.section)) man.sections.push(a.section);
+  if (!man.sections.includes(section)) man.sections.push(section);
 
   const tree = [
     { path: `entries/${a.id}.html`, mode: '100644', type: 'blob', content: html + '\n' },
@@ -375,7 +402,7 @@ const TOOLS = [
         section: { type: 'string' },
         keywords: { type: 'string', description: 'flat lowercase comma-separated' },
         source: { type: 'string', description: 'papers/videos only' },
-        html: { type: 'string', description: 'the entry fragment; root <div class="pearl e-{short}">' },
+        html: { type: 'string', description: 'the entry fragment in the White Book register; root <div class="pearl e-{short}"> with at least one <div class="wbbar">Section Name</div>. Colon is the lead-to-detail joint, no middots, bold not red, tables as <div class="tblwrap"><table class="wbt">. See SKILL.md section 4.' },
         use_inbox_photos: { type: 'boolean' },
       },
     },
