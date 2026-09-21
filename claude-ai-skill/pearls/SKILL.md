@@ -92,11 +92,15 @@ Non-negotiables: root `<div class="pearl e-{short}">`; at least one `.wbbar` sec
 
 The default is real text; an image of text is dead weight, unsearchable and unhighlightable. **An explicit ask overrides that default.** "Use the image itself", "as-is", "don't redesign", "keep the diagram" — honor it. Don't argue, don't quietly redesign anyway. Two shapes:
 
-**Raw entry** — the photos ARE the entry, nothing else in the fragment:
+**Raw entry** — the photos ARE the entry; the only text is the section bar and a `.wbcap` teaching caption per figure:
 
 ```html
 <div class="pearl e-{short}">
+  <div class="wbbar">Topic Name</div>
   <img class="photo" src="entries/img/{id}-1.jpg" alt="…">
+  <div class="wbcap"><b class="t">Reading the figure</b>
+    <ul><li><b>Step</b>: what the figure shows, in its own colours and arrows</li></ul>
+  </div>
   <img class="photo" src="entries/img/{id}-2.jpg" alt="…">
 </div>
 ```
@@ -104,9 +108,9 @@ The default is real text; an image of text is dead weight, unsearchable and unhi
 **Figure inside a text entry** — everything written stays real text, and the image sits at the point it belongs. Right when the source is a hand-drawn diagram, an ECG or imaging strip, or a chart that markup can't reproduce honestly:
 
 ```html
-<div class="sec">Original diagram</div>
+<div class="wbbar">Original Diagram</div>
 <img class="photo" src="entries/img/{id}-1.jpg" alt="…">
-<div class="note">Chalktalk, Parnassus 8/2026</div>
+<div class="wbfoot">Chalktalk, Parnassus 8/2026</div>
 ```
 
 Rules for both:
@@ -114,7 +118,8 @@ Rules for both:
 - **Photos travel out-of-band.** Lane 1: the `drop_page` paste target — one ⌘V, no file picker; wiring into the entry is automatic (see the lanes section). Lane 2: tell Max to attach the photo(s) with 📎 in the pearl issue composer (paste works there too), **in display order**, then Submit. The Action downloads them, resizes to ≤1600 px JPEG, and commits them as `entries/img/{id}-1.jpg`, `-2`, … in attachment order — so write exactly those paths in the fragment's `src` attributes.
 - **Alt text does the searching.** The pixels contribute nothing to the site index — the alt text carries every drug, dose, arrow, and label in a sentence or two. Never "photo of whiteboard". Push the same terms into the keywords.
 - **Flag once, then proceed.** If the image is mostly typed text, say in one line that the alt text will be doing the searching — then build it exactly as asked. Don't re-litigate.
-- Photo entries still get a real title, section, and keywords. The raw path skips the redesign, not the metadata.
+- Photo entries still get a real title, section, and keywords. The raw path skips the redesign, not the metadata — and **never the `.wbbar`**, which every entry needs (the worker rejects a fragment without one).
+- The caption is written to be READ; the alt text is what gets SEARCHED. Different texts, different jobs — never copy one into the other.
 
 ## 4 · Compose the issue body
 
@@ -126,6 +131,7 @@ One body carries everything — the manifest row in an HTML comment, the fragmen
 
     ```html
     <div class="pearl e-{short}">
+    <div class="wbbar">Section Name</div>
     …the entry…
     </div>
     ```
