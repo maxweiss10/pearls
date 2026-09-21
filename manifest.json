@@ -10,23 +10,21 @@
     "MSK & Sports",
     "Inpatient Essentials",
     "GI & Hepatology",
-    "Papers",
-    "Renal &amp; Electrolytes",
-    "Cross-Cover &amp; Acute Care"
+    "Papers"
   ],
   "entries": [
     {
       "id": "2026-09-16-opioid-pruritus",
       "title": "Opioid Pruritus on Night Float",
       "date": "2026-09-16",
-      "section": "Cross-Cover &amp; Acute Care",
-      "keywords": "opioid, pruritus, itching, nalbuphine, nubain, naloxone, ondansetron, zofran, diphenhydramine, benadryl, opioid rotation, morphine, hydromorphone, cross-cover, night float, sickle cell, note"
+      "section": "Cross-Cover & Acute Care",
+      "keywords": "opioid, pruritus, itching, nalbuphine, nubain, butorphanol, naloxone, ondansetron, zofran, diphenhydramine, benadryl, hydroxyzine, cetirizine, zyrtec, levocetirizine, xyzal, loratadine, antihistamine, pseudoallergy, opioid allergy, opioid rotation, morphine, hydromorphone, cross-cover, night float, sickle cell, note"
     },
     {
       "id": "2026-09-16-electrolyte-repletion",
       "title": "Electrolyte Repletion",
       "date": "2026-09-16",
-      "section": "Renal &amp; Electrolytes",
+      "section": "Renal & Electrolytes",
       "keywords": "potassium, hypokalemia, kcl, magnesium, hypomagnesemia, magnesium sulfate, magnesium oxide, phosphorus, hypophosphatemia, phos-nak, k-phos, calcium, hypocalcemia, calcium gluconate, calcium chloride, electrolyte repletion, lytes, white book, note"
     },
     {
