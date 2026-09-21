@@ -1,0 +1,53 @@
+# Deploy the Pearl MCP worker when its source changes.
+#
+# The site auto-deploys (GitHub Pages builds on every push to main) but the
+# worker did not: its code lived in this repo while the running copy only
+# changed when someone remembered `wrangler deploy`. That gap once left the
+# repo claiming a validation the live worker did not have.
+#
+# Needs a repo secret CLOUDFLARE_API_TOKEN. Until that exists this job skips
+# with a note rather than failing, so worker pushes don't show a red X.
+name: Deploy worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check for the Cloudflare token
+        id: gate
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Worker not deployed::CLOUDFLARE_API_TOKEN is not set, so the worker was left running its previous version. Create a token with the 'Edit Cloudflare Workers' template and add it with: gh secret set CLOUDFLARE_API_TOKEN --repo maxweiss10/pearls"
+          else
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Syntax-check the worker
+        if: steps.gate.outputs.has_token == 'true'
+        run: node --check worker/pearl-mcp/src/index.js
+
+      - name: Deploy
+        if: steps.gate.outputs.has_token == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: worker/pearl-mcp
+          # secrets (GITHUB_TOKEN, DROP_KEY, PATH_KEY) live in Cloudflare and
+          # survive a deploy — wrangler only replaces the script.
+          command: deploy
