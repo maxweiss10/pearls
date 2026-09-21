@@ -48,6 +48,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: worker/pearl-mcp
+          # Pinned. Left unset, the action asks npx for the newest wrangler,
+          # npx declines to auto-install it, and it silently falls back to
+          # 3.90.0 — so the deploying version drifts run to run.
+          wranglerVersion: '4.83.0'
           # secrets (GITHUB_TOKEN, DROP_KEY, PATH_KEY) live in Cloudflare and
           # survive a deploy — wrangler only replaces the script.
           command: deploy
