@@ -311,7 +311,7 @@ table.wbt{width:100%; border-collapse:collapse; margin:0; font-size:13.5px}
 .wbt td.n{white-space:nowrap}
 .wbt .reg{font-weight:400}
 /* a full-width band inside a table, the way the book labels a sub-group */
-.wbt td.band{background:#000; color:#fff; font-weight:700; text-align:center}
+.wbt td.band,.wbt tr:nth-child(even) td.band{background:#000; color:#fff; font-weight:700; text-align:center}
 .pearl .tblwrap{margin:3px 0 5px}
 .pearl .tblwrap table{min-width:600px}
 
