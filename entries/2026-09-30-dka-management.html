@@ -1,32 +1,50 @@
 <div class="pearl e-dka">
 <style>
 .e-dka{--stepbg:#f1f0e9;--stepbd:#dcd9cb;--gnbg:#e9f5ee;--gnbd:#c0dfcc;--gn:#1c6b4a;--pillbg:#fff;--pillbd:#c9cdd3;--con:#b9bfc7}
-.e-dka .box{border:1px solid var(--stepbd);background:var(--stepbg);border-radius:9px;padding:8px 11px;min-width:0}
+.e-dka .box{border:1px solid var(--stepbd);background:var(--stepbg);border-radius:9px;padding:8px 10px;min-width:0}
 .e-dka .go{background:var(--gnbg);border-color:var(--gnbd)}
 .e-dka .go .bt{color:var(--gn)}
 .e-dka .eb{font-size:.6rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
 .e-dka .bt{font-weight:700}
-.e-dka .bc{font-size:.9em;line-height:1.45;margin-top:1px}
+.e-dka .ln{font-size:.9em;line-height:1.4}
+.e-dka .kv{display:grid;grid-template-columns:max-content minmax(0,1fr);column-gap:9px;font-size:.9em;line-height:1.4;margin-top:4px}
+.e-dka .kv>*{padding:3px 0;border-top:1px solid var(--stepbd)}
+.e-dka .kv>b{white-space:nowrap}
+.e-dka .go .kv>*{border-color:var(--gnbd)}
+.e-dka .kv.st{grid-template-columns:minmax(0,1fr)}
+.e-dka .kv.st>span{border-top:0;padding-top:0}
+.e-dka .kv.st>b{padding-bottom:0}
+.e-dka .crit{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 8px;font-size:.9em;line-height:1.35}
+.e-dka .crit span{display:block;color:var(--mut)}
 .e-dka .down{display:flex;flex-direction:column;align-items:center;padding:4px 0}
 .e-dka .down .dar{color:var(--con);line-height:.9;font-size:1.05em}
-.e-dka .pill{border:1px solid var(--pillbd);background:var(--pillbg);border-radius:999px;padding:2px 8px;font-size:.58rem;font-weight:700;letter-spacing:.07em;color:var(--mut);white-space:nowrap;text-align:center}
-.e-dka .arms{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:start;margin:2px 0}
+.e-dka .pill{border:1px solid var(--pillbd);background:var(--pillbg);border-radius:999px;padding:2px 8px;font-size:.58rem;font-weight:700;letter-spacing:.07em;color:var(--mut);white-space:nowrap}
+.e-dka .arms{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:start}
 .e-dka .fnote{font-size:.85em;color:var(--mut);margin:0 0 10px;line-height:1.5}
-@media (max-width:700px){.e-dka .arms{grid-template-columns:1fr}.e-dka .pill{white-space:normal}}
+@media (max-width:760px){.e-dka .arms,.e-dka .crit{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.e-dka .arms{grid-template-columns:minmax(0,1fr)}}
 </style>
 
   <div class="wbbar">DKA Algorithm, Simplified <span class="cite">(<a href="entries/img/2026-09-30-dka-management-1.jpg" target="_blank">full UpToDate algorithm</a>)</span></div>
-  <p class="fnote">The four treatment arms run at the same time. Every branch, footnote and lab list lives in the full algorithm linked above.</p>
+  <p class="fnote">The four arms run at the same time. Every branch and footnote is in the full algorithm linked above.</p>
 
   <div class="box">
-    <div class="eb">Confirm</div>
-    <div class="bt">DKA</div>
-    <div class="bc">Glucose &#8805;200; venous pH &lt;7.3; HCO&#8323; &lt;18; ketones <i>(urine &#8805;2+ or BOHB &#8805;3)</i></div>
+    <div class="eb">Confirm DKA</div>
+    <div class="crit">
+      <div><span>Glucose</span><b>&#8805;200 mg/dL</b></div>
+      <div><span>Venous pH</span><b>&lt;7.3</b></div>
+      <div><span>HCO&#8323;</span><b>&lt;18 mEq/L</b></div>
+      <div><span>Ketones</span><b>urine &#8805;2+ or BOHB &#8805;3</b></div>
+    </div>
   </div>
   <div class="down"><span class="pill">HOUR 1</span><span class="dar">&#8595;</span></div>
   <div class="box">
     <div class="bt">1 L NS or LR over 1 h</div>
-    <div class="bc">Blood gas, BMP, CBC, UA, ECG; find the trigger; <b>corrected Na</b>: add 2 per 100 mg/dL glucose over 100</div>
+    <div class="kv">
+      <b>Send</b><span>blood gas, BMP, CBC, UA, ECG</span>
+      <b>Trigger</b><span>evaluate for the precipitating cause</span>
+      <b>Corrected Na</b><span>Na + 2 per 100 mg/dL glucose above 100</span>
+    </div>
   </div>
   <div class="down"><span class="pill">FOUR ARMS IN PARALLEL</span><span class="dar">&#8595;</span></div>
 
@@ -35,17 +53,22 @@
       <div class="box">
         <div class="eb">Fluids</div>
         <div class="bt">NS or LR ~1 L/h</div>
-        <div class="bc">Rate by exam; shock &#8594; pressors</div>
+        <div class="ln">Rate by exam</div>
+        <div class="ln">Shock &#8594; pressors</div>
       </div>
       <div class="down"><span class="pill">DEFICIT CORRECTED (&#8804;24 H)</span><span class="dar">&#8595;</span></div>
       <div class="box">
-        <div class="bt">Pick by corrected Na</div>
-        <div class="bc">Normal or high &#8594; <b>&#189;NS</b>; low &#8594; <b>NS</b>; 250&#8211;500 mL/h</div>
+        <div class="bt">Fluid by corrected Na</div>
+        <div class="kv">
+          <b>Normal / high</b><span>&#189;NS</span>
+          <b>Low</b><span>NS</span>
+          <b>Rate</b><span>250&#8211;500 mL/h</span>
+        </div>
       </div>
       <div class="down"><span class="pill">GLUCOSE &lt;250</span><span class="dar">&#8595;</span></div>
       <div class="box">
         <div class="bt">D5&#8211;10 in &#189;NS</div>
-        <div class="bc">150&#8211;250 mL/h</div>
+        <div class="ln">150&#8211;250 mL/h</div>
       </div>
     </div>
 
@@ -53,7 +76,11 @@
       <div class="box">
         <div class="eb">Potassium</div>
         <div class="bt">Confirm UOP &#8805;50 mL/h</div>
-        <div class="bc"><b>&lt;3.5</b>: HOLD insulin; KCl 10&#8211;20 mEq/h until &gt;3.5<br><b>3.5&#8211;5</b>: KCl 10&#8211;20 mEq per L of fluid, goal 4&#8211;5<br><b>&gt;5</b>: none; recheck q2h</div>
+        <div class="kv">
+          <b>K &lt;3.5</b><span><b>HOLD insulin</b><br>KCl 10&#8211;20 mEq/h<br>until K &gt;3.5</span>
+          <b>K 3.5&#8211;5</b><span>KCl 10&#8211;20 mEq<br>per L of fluid<br>goal K 4&#8211;5</span>
+          <b>K &gt;5</b><span>No KCl<br>recheck q2h</span>
+        </div>
       </div>
     </div>
 
@@ -61,17 +88,22 @@
       <div class="box">
         <div class="eb">Insulin, once K &gt;3.5</div>
         <div class="bt">Regular 0.1 U/kg/h IV</div>
-        <div class="bc">Bolus 0.1 U/kg only if the drip is delayed<br><b>Uncomplicated</b>: rapid-acting SUBQ 0.1 U/kg, then 0.1 U/kg q1h or 0.2 U/kg q2h</div>
+        <div class="kv st">
+          <b>If the drip is delayed</b><span>bolus 0.1 U/kg IV first</span>
+          <b>Uncomplicated DKA: SUBQ</b><span>rapid-acting 0.1 U/kg bolus<br>then 0.1 U/kg q1h<br>or 0.2 U/kg q2h</span>
+        </div>
       </div>
       <div class="down"><span class="pill">NOT DOWN 50&#8211;70 IN HOUR 1</span><span class="dar">&#8595;</span></div>
       <div class="box">
         <div class="bt">Double the rate</div>
-        <div class="bc">Fall must not exceed 90&#8211;120 mg/dL/h</div>
+        <div class="ln">Max fall 90&#8211;120 mg/dL/h</div>
       </div>
       <div class="down"><span class="pill">GLUCOSE &lt;250</span><span class="dar">&#8595;</span></div>
       <div class="box">
         <div class="bt">0.05 U/kg/h IV</div>
-        <div class="bc">or 0.1 U/kg SUBQ q2h; hold glucose 150&#8211;200 until resolved</div>
+        <div class="ln">or SUBQ 0.1 U/kg q2h</div>
+        <div class="ln">Hold glucose 150&#8211;200</div>
+        <div class="ln">until DKA resolves</div>
       </div>
     </div>
 
@@ -79,16 +111,31 @@
       <div class="box">
         <div class="eb">Bicarbonate</div>
         <div class="bt">Only if pH &lt;7.0</div>
-        <div class="bc">NaHCO&#8323; 100 mEq in 400 mL over 2 h; add 20 mEq KCl if K &lt;5; repeat q2h until pH &gt;7.0</div>
+        <div class="kv">
+          <b>Give</b><span>NaHCO&#8323; 100 mEq<br>in 400 mL water<br>over 2 h</span>
+          <b>K &lt;5</b><span>add 20 mEq KCl</span>
+          <b>Repeat</b><span>q2h until<br>pH &gt;7.0</span>
+        </div>
       </div>
     </div>
   </div>
 
+  <div class="down"><span class="pill">WHILE TREATING</span><span class="dar">&#8595;</span></div>
+  <div class="box">
+    <div class="eb">Monitor</div>
+    <div class="kv">
+      <b>q2&#8211;4h</b><span>lytes, BUN, venous pH, phos, Cr, glucose</span>
+      <b>q2h</b><span>BOHB</span>
+    </div>
+  </div>
   <div class="down"><span class="pill">RESOLVED AND EATING</span><span class="dar">&#8595;</span></div>
   <div class="box go">
     <div class="eb">Exit</div>
     <div class="bt">SUBQ basal-bolus</div>
-    <div class="bc">Keep the drip 1&#8211;2 h after the first rapid-acting SUBQ dose <i>(2&#8211;4 h if short- or long-acting)</i>; insulin-na&#239;ve TDD 0.5&#8211;0.6 U/kg/day. Until then: lytes, BUN, pH, phos, Cr, glucose q2&#8211;4h; BOHB q2h</div>
+    <div class="kv">
+      <b>Overlap</b><span>drip stays on 1&#8211;2 h after rapid-acting SUBQ<br>2&#8211;4 h after short- or long-acting</span>
+      <b>Insulin-na&#239;ve</b><span>TDD 0.5&#8211;0.6 U/kg/day, then adjust</span>
+    </div>
   </div>
 
   <div class="wbbox">
