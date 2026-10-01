@@ -1,23 +1,24 @@
 <div class="pearl e-dka">
 <style>
 .e-dka{--ln:#2b7bb9;--bd:#9a9a9a}
-.e-dka .sc{overflow-x:auto;padding-bottom:2px}
-.e-dka .ch{min-width:880px;font-size:11px;line-height:1.3}
-.e-dka .b{border:1px solid var(--bd);background:#fff;border-radius:3px;padding:3px 4px}
-.e-dka .b p{margin:0 0 3px;padding-left:5px;text-indent:-5px}
+.e-dka .sc{overflow-x:auto;padding-bottom:2px;container-type:inline-size}
+.e-dka .ch{min-width:888px;font-size:12.9px;font-size:max(12.9px,1.453cqw);line-height:1.25}
+.e-dka .b{border:1px solid var(--bd);background:#fff;border-radius:3px;padding:2px 3px}
+.e-dka .b p{margin:0 0 2px;padding-left:5px;text-indent:-5px}
 .e-dka .b p:last-child{margin:0}
 .e-dka .h{background:#D9D9D9}
-.e-dka .init{max-width:450px;margin:0 auto}
+.e-dka .init{max-width:36em;margin:0 auto}
 .e-dka .l{font-weight:700;text-align:center;padding:1px 0}
-.e-dka .tl>.c>.l{min-height:2.56em;display:flex;align-items:center;justify-content:center}
+.e-dka .tl>.c>.l{min-height:2.5em;display:flex;align-items:center;justify-content:center}
+.e-dka .t3>.c>.l{min-height:3.75em}
 .e-dka .s,.e-dka .a{width:0;margin:0 auto;border-left:1.5px solid var(--ln);position:relative;flex:none}
 .e-dka .s{height:8px}
 .e-dka .a{height:14px}
 .e-dka .a::after,.e-dka .t::after{content:"";position:absolute;bottom:0;left:50%;margin-left:-4.75px;border:4px solid transparent;border-top:6px solid var(--ln);border-bottom:0}
 .e-dka .t::after{margin-left:-4px}
-.e-dka .f{--g:5px;display:grid;gap:0 var(--g)}
+.e-dka .f{--g:3px;display:grid;gap:0 var(--g)}
 .e-dka .f2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.e-dka .ar{--g:7px;grid-template-columns:minmax(0,291fr) minmax(0,234fr) minmax(0,190fr) minmax(0,152fr)}
+.e-dka .ar{--g:5px;grid-template-columns:minmax(0,262fr) minmax(0,250fr) minmax(0,192fr) minmax(0,169fr)}
 .e-dka .c{position:relative;display:flex;flex-direction:column;min-width:0}
 .e-dka .m,.e-dka .t{flex:1;position:relative}
 .e-dka .m{min-height:9px}
@@ -31,7 +32,7 @@
 .e-dka .c:last-child::after,.e-dka .c:last-child>.m::after{right:50%}
 .e-dka .mon ul{columns:2;column-gap:28px;margin:0;padding-left:16px}
 .e-dka .mon li{break-inside:avoid;margin:0 0 2px}
-.e-dka .fn{font-size:12px;line-height:1.4;margin:8px 0 0}
+.e-dka .fn{font-size:13px;line-height:1.4;margin:8px 0 0}
 .e-dka .fn p{margin:0 0 3px}
 </style>
 
@@ -52,10 +53,10 @@
         <div class="a"></div>
         <div class="b">Determine volume status</div>
         <div class="s"></div>
-        <div class="f tl" style="grid-template-columns:minmax(0,93fr) minmax(0,105fr) minmax(0,83fr)">
-          <div class="c"><div class="s"></div><div class="l">Severe hypovolemia<br>(no shock)</div><div class="a"></div><div class="b"><p>NS or buffered crystalloid</p><p>~1 L/h</p><p>Rate by clinical assessment</p></div><div class="m"></div></div>
-          <div class="c"><div class="s"></div><div class="l">Mild hypovolemia</div><div class="a"></div><div class="b"><p>NS or buffered crystalloid</p><p>Rate by clinical assessment</p><p>If initial glucose &lt;250: add D5&#8211;10 to IVF at treatment start</p></div><div class="m"></div></div>
-          <div class="c"><div class="s"></div><div class="l">Cardiogenic shock</div><div class="a"></div><div class="b"><p>Hemodynamic monitoring / pressors</p></div><div class="m"></div></div>
+        <div class="f tl t3" style="grid-template-columns:minmax(0,80fr) minmax(0,99fr) minmax(0,77fr)">
+          <div class="c"><div class="s"></div><div class="l">Severe<br>hypovolemia<br>(no shock)</div><div class="a"></div><div class="b"><p>NS or buffered<br>crystalloid</p><p>~1 L/h</p><p>Rate by clinical<br>assessment</p></div><div class="m"></div></div>
+          <div class="c"><div class="s"></div><div class="l">Mild<br>hypovolemia</div><div class="a"></div><div class="b"><p>NS or buffered<br>crystalloid</p><p>Rate by clinical<br>assessment</p><p>If initial glucose &lt;250: add D5&#8211;10 to IVF at treatment start</p></div><div class="m"></div></div>
+          <div class="c"><div class="s"></div><div class="l">Cardiogenic<br>shock</div><div class="a"></div><div class="b"><p>Hemodynamic monitoring / pressors</p></div><div class="m"></div></div>
         </div>
         <div class="a"></div>
         <div class="b"><p>Determine volume and hydration status</p><p>Correct volume deficit within 24 h</p><p>Once corrected: adjust IVF by serum Na&#182;</p></div>
@@ -75,9 +76,9 @@
         <div class="a"></div>
         <div class="b"><p>Establish adequate kidney function</p><p>(UOP ~&#8805;50 mL/h)</p></div>
         <div class="s"></div>
-        <div class="f" style="grid-template-columns:minmax(0,83fr) minmax(0,77fr) minmax(0,64fr)">
+        <div class="f" style="grid-template-columns:minmax(0,91.5fr) minmax(0,83fr) minmax(0,69.5fr)">
           <div class="c"><div class="s"></div><div class="l">K &lt;3.5</div><div class="a"></div><div class="b"><p>Delay insulin</p><p>KCl 10&#8211;20 mEq/h</p><p>until K &gt;3.5</p></div></div>
-          <div class="c"><div class="s"></div><div class="l">K 3.5&#8211;5.0</div><div class="a"></div><div class="b"><p>KCl 10&#8211;20 mEq</p><p>in each L of IVF</p><p>Keep K 4&#8211;5</p></div></div>
+          <div class="c"><div class="s"></div><div class="l">K 3.5&#8211;5.0</div><div class="a"></div><div class="b"><p>KCl 10&#8211;20 mEq</p><p>per L of IVF</p><p>Keep K 4&#8211;5</p></div></div>
           <div class="c"><div class="s"></div><div class="l">K &gt;5.0</div><div class="a"></div><div class="b"><p>No KCl</p><p>Check K q2h</p></div></div>
         </div>
       </div>
@@ -86,14 +87,14 @@
         <div class="a"></div>
         <div class="b h"><p><b>Insulin</b></p><p>If initial K &lt;3.5: delay insulin</p><p>Give KCl until K &gt;3.5</p></div>
         <div class="s"></div>
-        <div class="f tl" style="grid-template-columns:minmax(0,96fr) minmax(0,89fr)">
-          <div class="c"><div class="s"></div><div class="l">Moderate&#8211;severe DKA<br>(IV insulin)</div><div class="a"></div><div class="b"><p>If regular insulin infusion is delayed:</p><p>consider IV regular bolus 0.1 U/kg before starting infusion</p></div><div class="a"></div><div class="b"><p>Regular insulin</p><p>0.1 U/kg/h IV</p><p>continuous infusion&#916;</p></div><div class="m"></div></div>
-          <div class="c"><div class="s"></div><div class="l">Uncomplicated DKA<br>(SUBQ insulin)</div><div class="a"></div><div class="b"><p>Rapid-acting insulin</p><p>0.1 U/kg bolus</p><p>then 0.1 U/kg q1h</p><p><b>or</b> 0.2 U/kg q2h</p></div><div class="m"></div></div>
+        <div class="f tl" style="grid-template-columns:minmax(0,96.5fr) minmax(0,92.5fr)">
+          <div class="c"><div class="s"></div><div class="l">Moderate&#8211;severe<br>DKA (IV)</div><div class="a"></div><div class="b"><p>If regular insulin<br>infusion delayed:</p><p>consider regular<br>IV bolus 0.1 U/kg<br>before infusion</p></div><div class="a"></div><div class="b"><p>Regular insulin</p><p>0.1 U/kg/h</p><p>IV infusion&#916;</p></div><div class="m"></div></div>
+          <div class="c"><div class="s"></div><div class="l">Uncomplicated<br>DKA (SUBQ)</div><div class="a"></div><div class="b"><p>Rapid-acting<br>insulin</p><p>0.1 U/kg bolus</p><p>then 0.1 U/kg q1h</p><p><b>or</b> 0.2 U/kg q2h</p></div><div class="m"></div></div>
         </div>
         <div class="a"></div>
-        <div class="b"><p>If glucose does not fall &#8805;50&#8211;70 mg/dL in the first hour: double the IV or SUBQ rate/dose</p><p>Decline should <b>NOT</b> exceed 90&#8211;120 mg/dL/h</p></div>
+        <div class="b"><p>If glucose does not fall<br>&#8805;50&#8211;70 mg/dL in first hour:<br>double IV or SUBQ rate/dose</p><p>Decline should <b>NOT</b> exceed<br>90&#8211;120 mg/dL/h</p></div>
         <div class="a"></div>
-        <div class="b"><p>When glucose &lt;250:</p><p>reduce regular insulin to 0.05 U/kg/h IV</p><p><b>or</b> rapid-acting 0.1 U/kg SUBQ q2h</p><p>Keep glucose 150&#8211;200 until DKA resolves</p><p>Resolution criteria: see UpToDate, treatment of DKA in adults</p></div>
+        <div class="b"><p>When glucose &lt;250:</p><p>reduce regular insulin<br>to 0.05 U/kg/h IV</p><p><b>or</b> rapid-acting 0.1 U/kg SUBQ q2h</p><p>Keep glucose 150&#8211;200<br>until DKA resolves</p><p>Resolution criteria: see UpToDate,<br>treatment of DKA in adults</p></div>
         <div class="t"></div>
       </div>
 
@@ -101,8 +102,8 @@
         <div class="a"></div>
         <div class="b h"><b>Assess need for bicarbonate</b></div>
         <div class="s"></div>
-        <div class="f" style="grid-template-columns:minmax(0,86fr) minmax(0,61fr)">
-          <div class="c"><div class="s"></div><div class="l">pH &lt;7.0</div><div class="a"></div><div class="b"><p>NaHCO&#8323; 100 mEq</p><p>in 400 mL sterile water</p><p>If K &lt;5.0: add 20 mEq KCl</p><p>Infuse over 2 h</p></div><div class="a"></div><div class="b"><p>Repeat NaHCO&#8323;</p><p>q2h until pH &gt;7.0</p></div></div>
+        <div class="f" style="grid-template-columns:minmax(0,97.5fr) minmax(0,68.5fr)">
+          <div class="c"><div class="s"></div><div class="l">pH &lt;7.0</div><div class="a"></div><div class="b"><p>NaHCO&#8323; 100 mEq</p><p>in 400 mL<br>sterile water</p><p>If K &lt;5.0:<br>add 20 mEq KCl</p><p>Infuse over 2 h</p></div><div class="a"></div><div class="b"><p>Repeat NaHCO&#8323;</p><p>q2h until pH &gt;7.0</p></div></div>
           <div class="c"><div class="s"></div><div class="l">pH &#8805;7.0</div><div class="a"></div><div class="b">No NaHCO&#8323;</div></div>
         </div>
       </div>
