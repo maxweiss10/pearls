@@ -935,7 +935,7 @@
   /* Resource icons are drawn from bundled Noto Emoji SVGs (icons/emoji/) so they render identically on
      every OS — hospital Windows builds lack the newer glyphs entirely and draw the rest with different
      artwork. Fallback chain: bundled file → jsDelivr copy of Noto → the plain character. */
-  const EMOJI_CDN = 'https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/svg/';
+  const EMOJI_CDN = 'https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/2D/svg/';
   function emojiFile(str) {
     const cps = [];
     for (const ch of String(str)) { const cp = ch.codePointAt(0); if (cp !== 0xFE0F) cps.push(cp.toString(16)); }

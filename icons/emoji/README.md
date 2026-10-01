@@ -11,4 +11,4 @@ Why: hospital Windows builds lack newer emoji glyphs entirely (🫀 🪪 🩸 re
 different artwork. Serving the vectors ourselves makes the Resources icons identical on every OS.
 
 When a resource gets a new emoji, drop its SVG in here:
-  curl -sL https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/svg/emoji_u<hex>.svg -o icons/emoji/emoji_u<hex>.svg
+  curl -sL https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/2D/svg/emoji_u<hex>.svg -o icons/emoji/emoji_u<hex>.svg
