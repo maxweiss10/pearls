@@ -14,27 +14,6 @@
   ],
   "entries": [
     {
-      "id": "2026-09-30-insulin-order-sets",
-      "title": "UCSF Inpatient Insulin Order Sets",
-      "date": "2026-09-30",
-      "section": "Endocrine & Obesity",
-      "keywords": "insulin, order sets, apex, epic, subcutaneous insulin, sq insulin, insulin drip, iv insulin, insulin pump, dka, diabetic ketoacidosis, npo, tpn, tube feeds, carbohydrate counting, pacu, ucsf, slide"
-    },
-    {
-      "id": "2026-09-30-inpatient-insulin",
-      "title": "Inpatient Insulin Dosing",
-      "date": "2026-09-30",
-      "section": "Endocrine & Obesity",
-      "keywords": "insulin, inpatient diabetes, hyperglycemia, basal-bolus, lispro, aspart, glulisine, regular insulin, nph, u-500, glargine, degludec, icodec, awiqli, efsitora, iv to subq transition, insulin infusion, premixed insulin, sliding scale, glucocorticoids, steroid hyperglycemia, tube feeds, enteral feeding, autotitration, logicnets, preop, rushakoff, handout"
-    },
-    {
-      "id": "2026-09-30-dka-management",
-      "title": "DKA Management in Adults",
-      "date": "2026-09-30",
-      "section": "Endocrine & Obesity",
-      "keywords": "dka, diabetic ketoacidosis, hyperglycemic crisis, insulin infusion, regular insulin, rapid-acting insulin, subcutaneous insulin, potassium, kcl, hypokalemia, sodium bicarbonate, nahco3, corrected sodium, isotonic fluids, lactated ringer, dextrose, beta-hydroxybutyrate, bohb, basal-bolus, transition, umpierrez, uptodate, algorithm, flowchart, slide"
-    },
-    {
       "id": "2026-09-16-opioid-pruritus",
       "title": "Opioid Pruritus on Night Float",
       "date": "2026-09-16",
