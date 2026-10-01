@@ -14,6 +14,13 @@
   ],
   "entries": [
     {
+      "id": "2026-09-30-insulin-order-sets",
+      "title": "UCSF Inpatient Insulin Order Sets",
+      "date": "2026-09-30",
+      "section": "Endocrine & Obesity",
+      "keywords": "insulin, order sets, apex, epic, subcutaneous insulin, sq insulin, insulin drip, iv insulin, insulin pump, dka, diabetic ketoacidosis, npo, tpn, tube feeds, carbohydrate counting, pacu, ucsf, slide"
+    },
+    {
       "id": "2026-09-30-inpatient-insulin",
       "title": "Inpatient Insulin Dosing",
       "date": "2026-09-30",
