@@ -58,5 +58,23 @@
     "url": "https://maxweiss10.github.io/t2d-atlas/",
     "desc": "Which glucose-lowering drug is next for this patient — ranked by indication rather than potency, with a contraindication gate, ADA 2026 recommendations, FDA label status, and real prices by channel.",
     "icon": "🩸"
+  },
+  {
+    "title": "Inpatient Diabetes Cheat Sheet",
+    "url": "https://maxweiss10.github.io/pearls/files/inpatient-diabetes-cheat-sheet.pdf",
+    "desc": "Starting doses, titration, steroids, NPO/tube feeds, APeX order sets, home meds; DKA/HHS with UCSF vs ADA 2024.",
+    "icon": "🏥"
+  },
+  {
+    "title": "Outpatient Diabetes Cheat Sheet",
+    "url": "https://maxweiss10.github.io/pearls/files/outpatient-diabetes-cheat-sheet.pdf",
+    "desc": "Drug choice by comorbidity, dosing, basal start/titration, annual screening, BP/statin/aspirin.",
+    "icon": "🩺"
+  },
+  {
+    "title": "Thyroid Cheat Sheet",
+    "url": "https://maxweiss10.github.io/pearls/files/thyroid-cheat-sheet.pdf",
+    "desc": "Reading TFTs, levothyroxine dosing, hyperthyroid workup + methimazole, nodule FNA thresholds and Bethesda.",
+    "icon": "🦋"
   }
 ]
